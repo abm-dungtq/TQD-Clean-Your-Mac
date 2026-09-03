@@ -235,7 +235,7 @@ discover_login_item_helper_bundle_ids() {
     scan_file=$(create_temp_file) || return 1
     local scan_rc=0
     _mole_uninstall_materialize_find0 "$scan_file" \
-        "$login_items_root" -maxdepth 1 -iname "*.app" \
+        "$login_items_root" -maxdepth 1 -name "*.app" \
         -print0 || scan_rc=$?
     if [[ $scan_rc -ne 0 ]]; then
         rm -f -- "$scan_file" 2> /dev/null || true # SAFE: exact tracked temp file created above
@@ -465,7 +465,7 @@ unregister_app_bundle() {
     local app_path="$1"
 
     [[ -n "$app_path" && -e "$app_path" ]] || return 0
-    [[ "$app_path" == *.[aA][pP][pP] ]] || return 0
+    [[ "$app_path" == *.app ]] || return 0
 
     local lsregister
     lsregister=$(get_lsregister_path)
@@ -480,9 +480,7 @@ unregister_app_bundle() {
     return 0
 }
 
-# Compact LaunchServices after uninstall without forcing every app and extension
-# to re-register. A domain-wide rebuild can terminate active app extensions,
-# including Network Extension packet tunnels such as Shadowrocket's.
+# Compact and rebuild LaunchServices after uninstall batch to clear stale app metadata.
 refresh_launch_services_after_uninstall() {
     local lsregister
     lsregister=$(get_lsregister_path)
@@ -490,10 +488,26 @@ refresh_launch_services_after_uninstall() {
 
     [[ "${MOLE_DRY_RUN:-0}" == "1" ]] && return 0
 
-    # Best-effort and bounded: stale records are collected, while the targeted
-    # -u call above handles the app bundle that was actually removed.
+    local success=0
+    set +e
+    # Add 10s timeout to prevent hanging (gc is usually fast)
+    # run_with_timeout falls back to shell implementation if timeout command unavailable
     run_with_timeout "$MOLE_TIMEOUT_PKG_LIST_SEC" "$lsregister" -gc > /dev/null 2>&1 || true
-    return 0
+    # 15s: lsregister rebuild can be slow on some systems, see lib/core/timeouts.sh
+    run_with_timeout 15 "$lsregister" -r -f -domain local -domain user -domain system > /dev/null 2>&1
+    success=$?
+    # 124 = timeout exit code (from run_with_timeout or timeout command)
+    if [[ $success -eq 124 ]]; then
+        debug_log "LaunchServices rebuild timed out, trying lighter version"
+        run_with_timeout "$MOLE_TIMEOUT_PKG_LIST_SEC" "$lsregister" -r -f -domain local -domain user > /dev/null 2>&1
+        success=$?
+    elif [[ $success -ne 0 ]]; then
+        run_with_timeout "$MOLE_TIMEOUT_PKG_LIST_SEC" "$lsregister" -r -f -domain local -domain user > /dev/null 2>&1
+        success=$?
+    fi
+    set -e
+
+    [[ $success -eq 0 || $success -eq 124 ]]
 }
 
 # Remove macOS Login Items for an app
@@ -510,7 +524,7 @@ remove_login_item() {
     [[ -z "$app_name" && -z "$bundle_id" ]] && return 0
 
     # Strip .app suffix if present (login items don't include it)
-    local clean_name="${app_name%.[aA][pP][pP]}"
+    local clean_name="${app_name%.app}"
 
     # Remove from Login Items using index-based deletion (handles broken items)
     if [[ -n "$clean_name" ]]; then
@@ -750,7 +764,7 @@ _uninstall_live_candidate_is_nested_app() {
     local component
     while [[ -n "$parent" && "$parent" != "." ]]; do
         component="${parent%%/*}"
-        [[ "$component" == *.[aA][pP][pP] ]] && return 0
+        [[ "$component" == *.app ]] && return 0
         [[ "$parent" == */* ]] || break
         parent="${parent#*/}"
     done
@@ -876,7 +890,7 @@ _uninstall_collect_live_sibling_candidate() {
         # and a single such app aborted the uninstall of every other app on
         # the machine (#1339). They are ordinary installs, not a mystery.
         local wrapped=""
-        for wrapped in "$app"/Wrapper/*.[aA][pP][pP]/Info.plist; do
+        for wrapped in "$app"/Wrapper/*.app/Info.plist; do
             if [[ -f "$wrapped" ]]; then
                 info="$wrapped"
                 break
@@ -990,7 +1004,7 @@ uninstall_live_bundle_has_other_install() {
             -mindepth 2 -maxdepth 2 \
             \( \
             \( -type d -name Applications \) -o \
-            \( \( -type d -o -type l \) -iname '*.app' \) \
+            \( \( -type d -o -type l \) -name '*.app' \) \
             \) || volume_scan_rc=$?
         if [[ $volume_scan_rc -eq $MOLE_UNINSTALL_SCAN_PARTIAL || $volume_scan_rc -eq 124 ]]; then
             # Some volume was unreadable, or the budget ran out before every
@@ -1024,7 +1038,7 @@ uninstall_live_bundle_has_other_install() {
         local scan_rc=0
         _uninstall_materialize_complete_find0 "$scan_file" \
             "$deadline_seconds" "$root" -maxdepth 3 \
-            \( -type d -o -type l \) -iname '*.app' || scan_rc=$?
+            \( -type d -o -type l \) -name '*.app' || scan_rc=$?
         if [[ $scan_rc -eq $MOLE_UNINSTALL_SCAN_PARTIAL ]]; then
             # Unreadable subpaths under an app root. The apps this listing did
             # find are still real, so keep going and let the doubt decide the
@@ -1196,7 +1210,7 @@ uninstall_surviving_sibling_names() {
         [[ "$is_selected" == true ]] && continue
 
         local other_base="${other_path##*/}"
-        other_base="${other_base%.[aA][pP][pP]}"
+        other_base="${other_base%.app}"
 
         # Emit each identifier plus its version-suffix-stripped base: a
         # survivor named "Foo Beta.app" also claims "Foo"-keyed dirs via the
@@ -1355,7 +1369,7 @@ _batch_scan_app_details() {
         # Leftover matching is destructive and must use the current bundle
         # basename, not a display name cached when the selection list opened.
         local discovery_app_name="${app_path##*/}"
-        discovery_app_name="${discovery_app_name%.[aA][pP][pP]}"
+        discovery_app_name="${discovery_app_name%.app}"
 
         local official_vendor=""
         if official_vendor=$(official_uninstaller_vendor "$bundle_id" "$app_name" "$app_path" 2> /dev/null); then
@@ -2380,8 +2394,7 @@ _batch_render_summary() {
 
             for success_path in "${success_items[@]}"; do
                 local display_name
-                display_name=$(basename "$success_path")
-                display_name="${display_name%.[aA][pP][pP]}"
+                display_name=$(basename "$success_path" .app)
                 local display_item="${GREEN}${display_name}${NC}"
 
                 if ((idx % 3 == 0)); then

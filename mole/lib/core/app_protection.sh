@@ -142,9 +142,7 @@ official_uninstaller_vendor() {
     local normalized_bundle normalized_name normalized_path
     normalized_bundle=$(printf '%s' "$bundle_id" | LC_ALL=C tr '[:upper:]' '[:lower:]')
     normalized_name=$(printf '%s' "$display_name" | LC_ALL=C tr '[:upper:]' '[:lower:]')
-    normalized_path=$(basename "${app_path:-}")
-    normalized_path="${normalized_path%.[aA][pP][pP]}"
-    normalized_path=$(printf '%s' "$normalized_path" | LC_ALL=C tr '[:upper:]' '[:lower:]')
+    normalized_path=$(basename "${app_path:-}" .app | LC_ALL=C tr '[:upper:]' '[:lower:]')
 
     local rule vendor prefixes fragments prefix fragment
     local -a _prefixes _fragments
@@ -462,19 +460,6 @@ should_protect_path() {
         */Library/Logs/mole | */Library/Logs/mole/ | */Library/Logs/mole/*)
             return 0
             ;;
-        # Codex Crashpad pending crash reports are disposable diagnostics and
-        # can accumulate pathologically (measured 623k files / ~50 GiB, #1490).
-        # ONLY direct children of the exact pending directory fall through to
-        # ordinary policy; anything nested deeper stays protected, and the
-        # pending directory itself, its Crashpad siblings (new, completed,
-        # attachments, settings.dat), and every other Codex path keep the
-        # blanket protection below. The one cleaner for this level is
-        # clean_codex_crashpad_pending, which adds age, process, handler,
-        # and open-file gates on top.
-        */Library/Application\ Support/Codex/Crashpad/pending/*/*)
-            return 0
-            ;;
-        */Library/Application\ Support/Codex/Crashpad/pending/?*) ;;
         # Codex Desktop and CLI keep conversation indexes and app state in cache-
         # shaped paths. Default cleanup must not remove those records.
         */Library/Application\ Support/Codex | */Library/Application\ Support/Codex/* | \

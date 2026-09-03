@@ -16,16 +16,17 @@ interface SidebarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   isScanning: boolean;
+  hasUpdate?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, isScanning }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, isScanning, hasUpdate }) => {
   const menuItems = [
     { id: "dashboard", label: "Tổng quan hệ thống", icon: LayoutDashboard, badge: null },
     { id: "clean", label: "Dọn dẹp bộ nhớ đệm", icon: Trash2, badge: null },
     { id: "dev_purge", label: "Dọn rác lập trình", icon: HardDrive, badge: "Dev" },
     { id: "uninstaller", label: "Gỡ cài đặt ứng dụng", icon: PackageMinus, badge: null },
     { id: "optimizer", label: "Tối ưu & Tăng tốc", icon: Cpu, badge: "RAM/DNS" },
-    { id: "settings", label: "Cài đặt & Danh sách an toàn", icon: Sliders, badge: null },
+    { id: "settings", label: "Cài đặt & Danh sách an toàn", icon: Sliders, badge: hasUpdate ? "Cập nhật" : null, badgeColor: hasUpdate ? "bg-macos-amber text-white font-bold animate-pulse" : undefined },
   ];
 
   return (
@@ -80,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, isSca
               </div>
               {item.badge && (
                 <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md shrink-0 ${
-                  isActive ? "bg-white/20 text-white font-bold" : "bg-macos-border text-macos-text-secondary"
+                  isActive ? "bg-white/20 text-white font-bold" : (item.badgeColor || "bg-macos-border text-macos-text-secondary")
                 }`}>
                   {item.badge}
                 </span>

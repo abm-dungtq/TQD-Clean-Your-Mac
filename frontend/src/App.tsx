@@ -20,6 +20,7 @@ export const App: React.FC = () => {
   const [categoryStatuses, setCategoryStatuses] = useState<Record<string, CategoryRunStatus>>({});
   const [sessionSource, setSessionSource] = useState<"web" | "terminal" | null>(null);
   const [isPurgingRam, setIsPurgingRam] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
     `[${new Date().toLocaleTimeString("vi-VN")}] [HỆ THỐNG] Khởi tạo kết nối TQD-Clean Your Mac...`,
     `[${new Date().toLocaleTimeString("vi-VN")}] [BẢO MẬT] Động cơ Mole Core v1.53.0 sẵn sàng.`,
@@ -60,6 +61,19 @@ export const App: React.FC = () => {
     fetchTelemetry();
     const interval = setInterval(fetchTelemetry, 1500);
     return () => clearInterval(interval);
+  }, [token]);
+
+  // 2b. Kiểm tra phiên bản mới trong nền
+  useEffect(() => {
+    if (!token) return;
+    fetch(`/api/system/check-update?token=${token}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.hasUpdate) {
+          setHasUpdate(true);
+        }
+      })
+      .catch(() => {});
   }, [token]);
 
   // 3. Kết nối kênh lắng nghe sự kiện Terminal nền (External Terminal Watcher)
@@ -266,7 +280,7 @@ export const App: React.FC = () => {
   return (
     <div className="flex h-screen bg-macos-canvas text-macos-text-primary font-sans overflow-hidden select-none">
       {/* Sidebar Navigation */}
-      <Sidebar currentTab={currentTab} onSelectTab={setCurrentTab} isScanning={isScanning} />
+      <Sidebar currentTab={currentTab} onSelectTab={setCurrentTab} isScanning={isScanning} hasUpdate={hasUpdate} />
 
       {/* Main Content Viewport */}
       <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 pt-10">

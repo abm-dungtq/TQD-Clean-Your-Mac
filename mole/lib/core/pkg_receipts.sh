@@ -143,15 +143,10 @@ pkg_receipt_nonstandard_app_paths() {
             local candidate="/$stripped"
 
             case "$candidate" in
-                /usr/local/*.[aA][pP][pP]) app_path="$candidate" ;;
-                /opt/*.[aA][pP][pP]) app_path="$candidate" ;;
-                /usr/local/*.[aA][pP][pP]/* | /opt/*.[aA][pP][pP]/*)
-                    local app_prefix app_suffix_and_rest app_suffix
-                    app_prefix="${candidate%%.[aA][pP][pP]/*}"
-                    app_suffix_and_rest="${candidate#"$app_prefix"}"
-                    app_suffix="${app_suffix_and_rest%%/*}"
-                    app_path="${app_prefix}${app_suffix}"
-                    ;;
+                /usr/local/*.app) app_path="$candidate" ;;
+                /opt/*.app) app_path="$candidate" ;;
+                /usr/local/*.app/*) app_path="${candidate%%.app/*}.app" ;;
+                /opt/*.app/*) app_path="${candidate%%.app/*}.app" ;;
                 *) continue ;;
             esac
 

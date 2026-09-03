@@ -99,7 +99,7 @@ source "$PROJECT_ROOT/lib/uninstall/brew.sh"
 brew() {
     case "$*" in
         "list --cask")
-            printf '%s\n' "mixed" "owned" "samename" "standard"
+            printf '%s\n' "owned" "samename" "standard"
             ;;
         "info --cask owned")
             printf 'app "%s"\n' "$HOME/Applications/Owned.app"
@@ -109,9 +109,6 @@ brew() {
             ;;
         "info --cask standard")
             printf '%s\n' 'Standard.app (App)'
-            ;;
-        "info --cask mixed")
-            printf '%s\n' 'Mixed.APP (App)'
             ;;
         *)
             return 1
@@ -127,8 +124,6 @@ owned=$(_detect_cask_via_brew_list "$HOME/Applications/Owned.app" "Owned.app")
 ! get_brew_cask_name "$HOME/Applications/SameName.app"
 standard=$(_detect_cask_via_brew_list "/Applications/Standard.app" "Standard.app")
 [[ "$standard" == "standard" ]] || exit 1
-mixed=$(_detect_cask_via_brew_list "/Applications/Mixed.APP" "Mixed.APP")
-[[ "$mixed" == "mixed" ]] || exit 1
 EOF
 
     [ "$status" -eq 0 ]

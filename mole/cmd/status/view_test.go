@@ -3,7 +3,6 @@ package main
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -1081,10 +1080,8 @@ func TestStatusDiagnosisLinePrioritizesFailingSMART(t *testing.T) {
 }
 
 func TestStatusDiagnosisLineUsesTopCPUProcess(t *testing.T) {
-	stale := false
 	m := MetricsSnapshot{
-		CPU:          CPUStatus{Usage: 95},
-		ProcessStale: &stale,
+		CPU: CPUStatus{Usage: 95},
 		TopProcesses: []ProcessInfo{
 			{Name: "Safari", CPU: 12},
 			{Name: "Xcode", CPU: 82},
@@ -1097,24 +1094,9 @@ func TestStatusDiagnosisLineUsesTopCPUProcess(t *testing.T) {
 	}
 }
 
-func TestStatusDiagnosisLineDoesNotNameStaleCPUProcess(t *testing.T) {
-	stale := true
-	m := MetricsSnapshot{
-		CPU:          CPUStatus{Usage: 95},
-		ProcessStale: &stale,
-		TopProcesses: []ProcessInfo{{Name: "Xcode", CPU: 82}},
-	}
-
-	if got := statusDiagnosisLine(m); got != "CPU load high" {
-		t.Fatalf("statusDiagnosisLine() = %q, want generic live-system diagnosis", got)
-	}
-}
-
 func TestStatusDiagnosisLineUsesMemoryContributorWhenCPUIsCalm(t *testing.T) {
-	stale := false
 	m := MetricsSnapshot{
-		CPU:          CPUStatus{Usage: 20},
-		ProcessStale: &stale,
+		CPU: CPUStatus{Usage: 20},
 		Memory: MemoryStatus{
 			UsedPercent: 86,
 			Pressure:    "warn",
@@ -1128,21 +1110,6 @@ func TestStatusDiagnosisLineUsesMemoryContributorWhenCPUIsCalm(t *testing.T) {
 	got := statusDiagnosisLine(m)
 	if got != "Chrome memory pressure" {
 		t.Fatalf("statusDiagnosisLine() = %q, want memory contributor", got)
-	}
-}
-
-func TestStatusDiagnosisLineDoesNotNameUnknownMemoryProcess(t *testing.T) {
-	m := MetricsSnapshot{
-		CPU: CPUStatus{Usage: 20},
-		Memory: MemoryStatus{
-			UsedPercent: 86,
-			Pressure:    "warn",
-		},
-		TopProcesses: []ProcessInfo{{Name: "Chrome", Memory: 31}},
-	}
-
-	if got := statusDiagnosisLine(m); got != "Memory pressure high" {
-		t.Fatalf("statusDiagnosisLine() = %q, want generic diagnosis for unknown freshness", got)
 	}
 }
 
@@ -1185,72 +1152,6 @@ func TestRenderProcessCardShowsCollectingWhenEmpty(t *testing.T) {
 	}
 	if got := stripANSI(card.lines[0]); got != "Collecting..." {
 		t.Fatalf("renderProcessCard() empty line = %q", got)
-	}
-}
-
-func TestBuildCardsMarksStaleProcessSampleAtNarrowAndWideWidths(t *testing.T) {
-	stale := true
-	collectedAt := time.Date(2026, time.August, 30, 9, 7, 0, 0, time.Local)
-	snapshot := MetricsSnapshot{
-		TopProcesses:       []ProcessInfo{{Name: "Xcode", CPU: 82}},
-		ProcessStale:       &stale,
-		ProcessCollectedAt: &collectedAt,
-	}
-
-	for _, width := range []int{5, 19, 20, 56} {
-		cards := buildCards(snapshot, width, 0, true)
-		processCard := cards[4]
-		rendered := stripANSI(renderCard(processCard, width))
-		if !strings.Contains(rendered, "STALE") {
-			t.Fatalf("process card width %d missing stale marker: %q", width, rendered)
-		}
-		if width >= 19 && !strings.Contains(rendered, "82.0%") {
-			t.Fatalf("process card width %d should retain cached process metrics: %q", width, rendered)
-		}
-		if width >= 56 && !strings.Contains(rendered, "Xcode") {
-			t.Fatalf("wide process card should retain the cached process name: %q", rendered)
-		}
-	}
-}
-
-func TestBuildCardsMarksUnknownProcessFreshness(t *testing.T) {
-	snapshot := MetricsSnapshot{
-		TopProcesses: []ProcessInfo{{Name: "Xcode", CPU: 82}},
-	}
-
-	cards := buildCards(snapshot, 56, 0, true)
-	rendered := stripANSI(renderCard(cards[4], 56))
-	if !strings.Contains(rendered, "UNKNOWN") || !strings.Contains(rendered, "Xcode") {
-		t.Fatalf("unknown-freshness process card should label retained evidence: %q", rendered)
-	}
-}
-
-func TestBuildCardsDistinguishesEmptyProcessSampleStates(t *testing.T) {
-	fresh := false
-	stale := true
-	zero := 0
-	tests := []struct {
-		name     string
-		snapshot MetricsSnapshot
-		want     string
-	}{
-		{name: "fresh empty", snapshot: MetricsSnapshot{ProcessStale: &fresh}, want: "No process activity"},
-		{name: "fresh alert only", snapshot: MetricsSnapshot{ProcessStale: &fresh, ProcessAlerts: []ProcessAlert{{Status: "active"}}}, want: "No process rows · active alert above"},
-		{name: "stale empty", snapshot: MetricsSnapshot{ProcessStale: &stale}, want: "STALE · no retained process activity"},
-		{name: "stale measured zero", snapshot: MetricsSnapshot{ProcessStale: &stale, ZombieCount: &zero}, want: "STALE · no retained process activity"},
-		{name: "unknown retained alert", snapshot: MetricsSnapshot{ProcessAlerts: []ProcessAlert{{Status: "active"}}}, want: "UNKNOWN · process sample unavailable"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cards := buildCards(tt.snapshot, 38, 0, true)
-			rendered := stripANSI(renderCard(cards[4], 38))
-			if !strings.Contains(rendered, tt.want) {
-				t.Fatalf("process state should render %q, got %q", tt.want, rendered)
-			}
-			if strings.Contains(rendered, "Collecting") {
-				t.Fatalf("known or retained process state should not look like initial collection, got %q", rendered)
-			}
-		})
 	}
 }
 

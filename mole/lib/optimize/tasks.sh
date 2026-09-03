@@ -1773,7 +1773,7 @@ _login_item_app_exists() {
             if [[ ${#name_expr[@]} -gt 0 ]]; then
                 name_expr+=("-o")
             fi
-            name_expr+=("-iname" "$app_name")
+            name_expr+=("-name" "$app_name")
         done
         candidate=$(command find "$roots" -maxdepth 6 -type d \( "${name_expr[@]}" \) -print -quit 2> /dev/null || true)
         if [[ -n "$candidate" && -d "$candidate" ]]; then
@@ -1785,7 +1785,7 @@ _login_item_app_exists() {
             if _login_item_bundle_metadata_matches "$app_path" "$name" "$nospace" "$stripped"; then
                 return 0
             fi
-        done < <(command find "$roots" -maxdepth 6 -type d -iname "*.app" -print0 2> /dev/null)
+        done < <(command find "$roots" -maxdepth 6 -type d -name "*.app" -print0 2> /dev/null)
     done
     # 5. Fallback: check sfltool dumpbtm for the actual on-disk path.
     #    Nested helper apps (e.g. DBnginMenuHelper.app inside DBngin.app) are

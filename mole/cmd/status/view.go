@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 
@@ -289,74 +288,26 @@ func getScoreStyle(score int) lipgloss.Style {
 	}
 }
 
-func renderProcessAlertBar(alerts []ProcessAlert, processStale *bool, processCollectedAt *time.Time, width int) string {
+func renderProcessAlertBar(alerts []ProcessAlert, width int) string {
 	active := activeAlerts(alerts)
 	if len(active) == 0 {
 		return ""
 	}
 
 	focus := active[0]
-	prefix := "ALERT"
-	historical := !processSnapshotFresh(processStale)
-	if historical {
-		prefix = "LAST ALERT"
-		available := max(width-2, 0)
-		if width > 0 && lipgloss.Width(prefix) > available {
-			prefix = "OLD"
-		}
-	}
 
-	detail := fmt.Sprintf(
-		"%s at %.1f%% for %s (threshold %.1f%%)",
+	text := fmt.Sprintf(
+		"ALERT %s at %.1f%% for %s (threshold %.1f%%)",
 		formatProcessLabel(ProcessInfo{PID: focus.PID, Name: focus.Name}),
 		focus.CPU,
 		focus.Window,
 		focus.Threshold,
 	)
-	text := prefix + " " + detail
 	if len(active) > 1 {
 		text += fmt.Sprintf(" · +%d more", len(active)-1)
 	}
-	if historical {
-		freshnessWidth := -1
-		if width > 0 {
-			freshnessWidth = max(width-2-lipgloss.Width(prefix+" · "), 0)
-		}
-		if freshness := processFreshnessLabel(processStale, processCollectedAt, freshnessWidth); freshness != "" {
-			text = prefix + " · " + freshness + " · " + strings.TrimPrefix(text, prefix+" ")
-		}
-	}
 
 	return renderBanner(alertBarStyle, text, width)
-}
-
-func processSnapshotStale(stale *bool) bool {
-	return stale != nil && *stale
-}
-
-func processSnapshotFresh(stale *bool) bool {
-	return stale != nil && !*stale
-}
-
-func processFreshnessLabel(stale *bool, collectedAt *time.Time, maxWidth int) string {
-	if processSnapshotFresh(stale) {
-		return ""
-	}
-	base := "STALE"
-	if stale == nil {
-		base = "UNKNOWN"
-	}
-	if maxWidth >= 0 && lipgloss.Width(base) > maxWidth {
-		return ""
-	}
-	if base == "UNKNOWN" || collectedAt == nil || collectedAt.IsZero() {
-		return base
-	}
-	label := base + " " + collectedAt.Format(time.RFC3339)
-	if maxWidth >= 0 && lipgloss.Width(label) > maxWidth {
-		return base
-	}
-	return label
 }
 
 func renderBanner(style lipgloss.Style, text string, width int) string {
@@ -689,42 +640,12 @@ func buildCards(m MetricsSnapshot, width int, cpuCores int, batteryProbed bool) 
 	if m.ZombieCount != nil {
 		zombieCount = *m.ZombieCount
 	}
-	processCard := renderProcessCardWithZombies(m.TopProcesses, zombieCount, m.ZombieParents, width)
-	hasRenderedProcessData := len(m.TopProcesses) > 0 || zombieCount > 0
-	hasActiveProcessAlert := len(activeAlerts(m.ProcessAlerts)) > 0
-	switch {
-	case processSnapshotFresh(m.ProcessStale):
-		if !hasRenderedProcessData {
-			message := "No process activity"
-			if hasActiveProcessAlert {
-				message = "No process rows · active alert above"
-			}
-			processCard.lines = []string{subtleStyle.Render(message)}
-		}
-	case processSnapshotStale(m.ProcessStale):
-		freshnessWidth := width
-		if freshnessWidth <= 0 {
-			freshnessWidth = colWidth
-		}
-		freshness := processFreshnessLabel(m.ProcessStale, m.ProcessCollectedAt, freshnessWidth)
-		if hasRenderedProcessData {
-			processCard.lines = append([]string{warnStyle.Render(freshness)}, processCard.lines...)
-		} else {
-			processCard.lines = []string{warnStyle.Render(freshness + " · no retained process activity")}
-		}
-	default:
-		if hasRenderedProcessData {
-			processCard.lines = append([]string{warnStyle.Render("UNKNOWN")}, processCard.lines...)
-		} else if hasActiveProcessAlert || m.ProcessCollectedAt != nil || m.ZombieCount != nil {
-			processCard.lines = []string{warnStyle.Render("UNKNOWN · process sample unavailable")}
-		}
-	}
 	cards := []cardData{
 		renderCPUCard(m.CPU, m.Thermal, cpuCores),
 		renderMemoryCard(m.Memory, width),
 		renderDiskCard(m.Disks, m.DiskIO, m.TrashSize, m.TrashApprox),
 		renderBatteryCard(m.Batteries, m.Thermal, batteryProbed),
-		processCard,
+		renderProcessCardWithZombies(m.TopProcesses, zombieCount, m.ZombieParents, width),
 		renderNetworkCard(m.Network, m.NetworkHistory, m.Proxy, width),
 	}
 	// Sensors card disabled - redundant with CPU temp

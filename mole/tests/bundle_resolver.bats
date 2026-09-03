@@ -78,17 +78,6 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "bundle_has_installed_app finds a mixed-case app bundle suffix" {
-    make_app "$FAKE_APPS/KeePassXC.APP" "org.keepassxc.KeePassXC"
-
-    run env FAKE_APPS="$FAKE_APPS" PROJECT_ROOT="$PROJECT_ROOT" /bin/bash --noprofile --norc <<EOF
-$(prelude)
-bundle_has_installed_app "org.keepassxc.KeePassXC"
-EOF
-
-    [ "$status" -eq 0 ]
-}
-
 @test "bundle_has_installed_app falls back after run_with_timeout returns 124 (set -e + pipefail regression)" {
     # Regression for the flake that blocked PR #770: under `set -euo pipefail`,
     # `hit=$(run_with_timeout ... | head -1)` inside a command substitution

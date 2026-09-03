@@ -34,7 +34,7 @@ setup() {
 
 @test "mo_spinner_chars returns default sequence" {
     result="$(HOME="$HOME" /bin/bash --noprofile --norc -c "source '$PROJECT_ROOT/lib/core/common.sh'; mo_spinner_chars")"
-    [ "$result" = $'⠋\n⠙\n⠹\n⠸\n⠼\n⠴\n⠦\n⠧\n⠇\n⠏' ]
+    [ "$result" = "|/-\\" ]
 }
 
 @test "detect_architecture maps current CPU to friendly label" {
@@ -742,26 +742,6 @@ EOF
         > /dev/null 2>&1
 
     [ ! -f "$marker" ]
-}
-
-@test "start_inline_spinner emits complete UTF-8 frames in C locale" {
-    if ! /usr/bin/script -q /dev/null /usr/bin/true < /dev/null > /dev/null 2>&1; then
-        skip "script cannot allocate a TTY in this environment"
-    fi
-
-    local raw="$HOME/spinner-c-locale.raw"
-    # shellcheck disable=SC2016  # inner bash expands these from its environment
-    PROJECT_ROOT="$PROJECT_ROOT" HOME="$HOME" TERM=xterm-256color LC_ALL=C \
-        /usr/bin/script -q "$raw" /bin/bash --noprofile --norc -c \
-        'source "$PROJECT_ROOT/lib/core/common.sh"; start_inline_spinner "Testing..."; /bin/sleep 0.95; stop_inline_spinner' \
-        < /dev/null > /dev/null 2>&1
-
-    /usr/bin/iconv -f UTF-8 -t UTF-8 "$raw" > /dev/null || return 1
-    raw_content="$(cat "$raw")"
-    # The old byte-slicing implementation emitted invalid UTF-8 here. Do not
-    # require a full animation cycle: CI startup time can consume part of this
-    # bounded capture even though the spinner itself is healthy.
-    [[ "$raw_content" == *"⠋"* ]]
 }
 
 @test "update_inline_spinner_message returns 1 without an active spinner" {

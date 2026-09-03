@@ -69,3 +69,17 @@ export interface InstalledApp {
   sizeString: string;
   sizeBytes: number;
 }
+
+export interface UpdateCheckResult {
+  hasUpdate: boolean;
+  hasAppUpdate: boolean;
+  hasMoleUpdate: boolean;
+  currentAppVersion: string;
+  latestAppVersion: string;
+  currentMoleVersion: string;
+  latestMoleVersion: string;
+  releaseUrl: string;
+  releaseNotes?: string;
+  publishedAt?: string;
+  checkedAt?: string;
+}

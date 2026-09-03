@@ -27,7 +27,7 @@ uninstall_steam_launcher_appid() {
     fi
     if [[ -z "$exec_name" ]]; then
         exec_name="${app_path##*/}"
-        exec_name="${exec_name%.[aA][pP][pP]}"
+        exec_name="${exec_name%.app}"
     fi
 
     local script="$app_path/Contents/MacOS/$exec_name"

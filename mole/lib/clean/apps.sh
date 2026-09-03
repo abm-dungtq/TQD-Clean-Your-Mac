@@ -208,7 +208,7 @@ scan_installed_apps() {
         (
             local worker_started_at=$SECONDS
             local app_paths
-            if ! app_paths=$(command find "$app_dir" -maxdepth 3 -type d -iname '*.app' 2> /dev/null); then
+            if ! app_paths=$(command find "$app_dir" -maxdepth 3 -type d -name '*.app' 2> /dev/null); then
                 printf '%s\n' "$app_dir" >> "$scan_tmp_dir/scan_failures.list"
                 exit 1
             fi
@@ -220,7 +220,7 @@ scan_installed_apps() {
                 # whose plist is not under Contents/, which then failed the
                 # scan. Helper bundles nested elsewhere are left alone.
                 case "$app_path" in
-                    */Wrapper/*.[aA][pP][pP]) continue ;;
+                    */Wrapper/*.app) continue ;;
                 esac
                 local plist_path="$app_path/Contents/Info.plist"
                 # iOS and iPadOS apps installed on Apple Silicon have no
@@ -231,7 +231,7 @@ scan_installed_apps() {
                 # App leftovers section.
                 if [[ ! -f "$plist_path" ]]; then
                     local wrapped_plist=""
-                    for wrapped_plist in "$app_path"/Wrapper/*.[aA][pP][pP]/Info.plist; do
+                    for wrapped_plist in "$app_path"/Wrapper/*.app/Info.plist; do
                         if [[ -f "$wrapped_plist" ]]; then
                             plist_path="$wrapped_plist"
                             break
@@ -1152,7 +1152,7 @@ clean_orphaned_system_services() {
         # prefers a stale plist false negative over deleting a live updater's
         # registration. See #1447.
         case "$binary" in
-            /Library/PrivilegedHelperTools/*.[aA][pP][pP]/Contents/MacOS/*)
+            /Library/PrivilegedHelperTools/*.app/Contents/MacOS/*)
                 return 1
                 ;;
         esac

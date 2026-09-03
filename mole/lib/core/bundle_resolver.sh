@@ -129,7 +129,7 @@ bundle_has_installed_app() {
             "$deadline_seconds") || app_scan_rc=$?
         if [[ $app_scan_rc -eq 0 ]]; then
             run_with_timeout "$app_scan_timeout" /usr/bin/find "$app_root" \
-                -maxdepth "$app_scan_depth" -iname "*.app" -print0 \
+                -maxdepth "$app_scan_depth" -name "*.app" -print0 \
                 < /dev/null > "$app_scan_file" 2> /dev/null || app_scan_rc=$?
         fi
         if [[ $app_scan_rc -ne 0 ]]; then

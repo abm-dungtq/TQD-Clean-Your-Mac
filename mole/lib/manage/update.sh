@@ -662,16 +662,10 @@ is_homebrew_mole_path() {
     if [[ -L "$mole_path" ]]; then
         link_target=$(readlink "$mole_path" 2> /dev/null) || true
         if [[ "$link_target" == *"Cellar/mole"* ]]; then
-            # The on-disk link IS the evidence: a symlink into Cellar/mole can
-            # only come from Homebrew. Requiring a live `brew list` probe here
-            # turned brew flakiness into a manual-install verdict, and the
-            # manual updater then wrote real files over Homebrew's symlinks in
-            # the brew prefix; after the next `brew upgrade` removed that keg,
-            # the stale entry pinned a dead Cellar path and brew refused to
-            # relink foreign files (#1488). Fail toward Homebrew: worst case
-            # `brew upgrade mole` reports its own failure instead of Mole
-            # silently taking over brew's namespace.
-            return 0
+            if $has_brew; then
+                brew_mole_formula_installed brew && return 0
+            fi
+            return 1
         fi
         return 1
     fi

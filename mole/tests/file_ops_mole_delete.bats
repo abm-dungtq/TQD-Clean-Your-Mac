@@ -343,17 +343,6 @@ EOF
     [[ "$(grep -c '^osascript:' "$trace" 2> /dev/null || true)" -eq 0 ]]
 }
 
-@test "mixed-case app suffix still uses the application Trash path" {
-    run env HOME="$HOME" PROJECT_ROOT="$PROJECT_ROOT" /bin/bash --noprofile --norc <<'EOF'
-set -euo pipefail
-source "$PROJECT_ROOT/lib/core/common.sh"
-_mole_path_is_application_bundle "/Applications/Example.APP"
-_mole_path_requires_direct_trash "/Applications/Example.App"
-EOF
-
-    [ "$status" -eq 0 ]
-}
-
 @test "application Trash falls back to Finder after a direct TCC denial" {
     local trace="$SANDBOX/app-finder-fallback.log"
 

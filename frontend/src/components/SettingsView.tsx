@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Sliders, ShieldCheck, History, ExternalLink, Plus, Trash2, Save, CheckCircle2 } from "lucide-react";
+import { Sliders, ShieldCheck, History, ExternalLink, Plus, Trash2, Save, CheckCircle2, RefreshCw, Download, ArrowUpCircle, Sparkles } from "lucide-react";
+import { UpdateCheckResult } from "../types";
 
 interface SettingsViewProps {
   token: string;
@@ -11,6 +12,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ token }) => {
   const [history, setHistory] = useState<any>(null);
   const [fdaStatus, setFdaStatus] = useState<{ hasAccess: boolean; guidanceUrl: string }>({ hasAccess: false, guidanceUrl: "" });
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+
+  const fetchUpdateStatus = async (force = false) => {
+    setIsCheckingUpdate(true);
+    try {
+      const res = await fetch(`/api/system/check-update?token=${token}${force ? "&force=true" : ""}`);
+      if (res.ok) {
+        const data: UpdateCheckResult = await res.json();
+        setUpdateInfo(data);
+      }
+    } catch (err) {
+      console.error("Lỗi khi kiểm tra cập nhật:", err);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Whitelist
@@ -30,6 +48,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ token }) => {
       .then(r => r.json())
       .then(d => setFdaStatus(d))
       .catch(console.error);
+
+    // 4. Update status (silent initial check)
+    fetchUpdateStatus(false);
   }, [token]);
 
   const handleAddRule = () => {
@@ -95,6 +116,92 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ token }) => {
           <ExternalLink className="w-3.5 h-3.5" />
           Mở Cài Đặt Hệ Thống Mac
         </a>
+      </div>
+
+      {/* Software Update Section */}
+      <div className="bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <ArrowUpCircle className="w-5 h-5 text-macos-blue" />
+            <h3 className="text-sm font-bold text-macos-text-primary">
+              Cập Nhật Ứng Dụng & Lõi Động Cơ Mole
+            </h3>
+          </div>
+          <button
+            onClick={() => fetchUpdateStatus(true)}
+            disabled={isCheckingUpdate}
+            className="px-3.5 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-macos-border text-xs font-semibold text-macos-text-primary shadow-macos-card transition-all flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-macos-blue ${isCheckingUpdate ? "animate-spin" : ""}`} />
+            {isCheckingUpdate ? "Đang kiểm tra..." : "Kiểm tra cập nhật"}
+          </button>
+        </div>
+
+        {/* Version details pill row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="p-3 rounded-xl bg-[#F9F9FB] border border-macos-border flex items-center justify-between">
+            <div>
+              <span className="text-macos-text-caption block text-[10px] font-semibold uppercase tracking-wider">Ứng Dụng TQD-Clean</span>
+              <span className="text-macos-text-primary font-bold text-sm">v{updateInfo?.currentAppVersion || "1.0.0"}</span>
+            </div>
+            {updateInfo?.hasAppUpdate ? (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-macos-amber-subtle text-[#B25E02] border border-macos-amber/20">
+                Có bản v{updateInfo.latestAppVersion}
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-macos-green-subtle text-[#248A3D] border border-macos-green/20">
+                Mới nhất
+              </span>
+            )}
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#F9F9FB] border border-macos-border flex items-center justify-between">
+            <div>
+              <span className="text-macos-text-caption block text-[10px] font-semibold uppercase tracking-wider">Lõi Động Cơ Mole</span>
+              <span className="text-macos-indigo font-bold text-sm">v{updateInfo?.currentMoleVersion || "1.53.0"}</span>
+            </div>
+            {updateInfo?.hasMoleUpdate ? (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-macos-blue-subtle text-macos-blue border border-macos-blue/20">
+                Upstream v{updateInfo.latestMoleVersion}
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-macos-green-subtle text-[#248A3D] border border-macos-green/20">
+                Đồng bộ
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Status result banner */}
+        {updateInfo?.hasUpdate ? (
+          <div className="p-4 rounded-xl bg-macos-blue-subtle/50 border border-macos-blue/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-macos-blue font-bold text-xs">
+                <Sparkles className="w-4 h-4 text-macos-blue" />
+                <span>ĐÃ CÓ PHIÊN BẢN MỚI SẴN SÀNG!</span>
+              </div>
+              <p className="text-xs text-macos-text-secondary">
+                {updateInfo.hasAppUpdate
+                  ? `Phiên bản mới v${updateInfo.latestAppVersion} đã được phát hành trên GitHub.`
+                  : `Kho nguồn upstream tw93/mole đã cập nhật phiên bản v${updateInfo.latestMoleVersion}.`}
+              </p>
+            </div>
+            <a
+              href={updateInfo.releaseUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-full bg-macos-blue hover:bg-macos-blue-hover text-white text-xs font-semibold shadow-macos-button transition-all flex items-center gap-1.5 shrink-0"
+            >
+              <Download className="w-3.5 h-3.5 text-white" />
+              Tải Bản Cài Đặt (.DMG)
+            </a>
+          </div>
+        ) : updateInfo ? (
+          <div className="flex items-center gap-2 text-xs text-[#248A3D] bg-macos-green-subtle/40 p-3 rounded-xl border border-macos-green/20">
+            <CheckCircle2 className="w-4 h-4 text-macos-green shrink-0" />
+            <span>Bạn đang sử dụng phiên bản mới nhất. Toàn bộ tính năng và lõi động cơ Mole đều đã được cập nhật.</span>
+          </div>
+        ) : null}
       </div>
 
       {/* Whitelist Manager */}

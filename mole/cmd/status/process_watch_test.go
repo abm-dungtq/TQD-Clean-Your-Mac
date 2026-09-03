@@ -403,13 +403,12 @@ func TestProcessWatcherResetsOnPIDReuse(t *testing.T) {
 }
 
 func TestRenderProcessAlertBar(t *testing.T) {
-	stale := false
 	alerts := []ProcessAlert{
 		{PID: 10, Name: "node", CPU: 150, Threshold: 100, Window: "5m0s", Status: "active"},
 		{PID: 11, Name: "java", CPU: 130, Threshold: 100, Window: "5m0s", Status: "active"},
 	}
 
-	bar := renderProcessAlertBar(alerts, &stale, nil, 120)
+	bar := renderProcessAlertBar(alerts, 120)
 	if !strings.Contains(bar, "ALERT") {
 		t.Fatalf("missing alert prefix: %q", bar)
 	}
@@ -421,48 +420,6 @@ func TestRenderProcessAlertBar(t *testing.T) {
 	}
 	if strings.Contains(bar, "terminate") || strings.Contains(bar, "ignore") {
 		t.Fatalf("unexpected action text in read-only alert bar: %q", bar)
-	}
-}
-
-func TestRenderProcessAlertBarMarksStaleSamplesBeforeTruncation(t *testing.T) {
-	stale := true
-	collectedAt := time.Date(2026, time.August, 30, 9, 7, 0, 0, time.FixedZone("UTC+8", 8*60*60))
-	alerts := []ProcessAlert{{
-		PID: 10, Name: "node", CPU: 150, Threshold: 100, Window: "5m0s", Status: "active",
-	}}
-
-	narrowBar := stripANSI(renderProcessAlertBar(alerts, &stale, &collectedAt, 10))
-	if !strings.HasPrefix(strings.TrimSpace(narrowBar), "OLD") {
-		t.Fatalf("historical alert marker should survive narrow rendering, got %q", narrowBar)
-	}
-	if strings.Contains(narrowBar, "2026") {
-		t.Fatalf("narrow rendering should not show a partial timestamp, got %q", narrowBar)
-	}
-	wideBar := stripANSI(renderProcessAlertBar(alerts, &stale, &collectedAt, 120))
-	if !strings.HasPrefix(strings.TrimSpace(wideBar), "LAST ALERT · STALE 2026-08-30T09:07:00+08:00") {
-		t.Fatalf("stale process alert should include unambiguous age and historical semantics, got %q", wideBar)
-	}
-	if strings.Contains(wideBar, "· ALERT ") {
-		t.Fatalf("stale process alert should not present itself as current, got %q", wideBar)
-	}
-	unboundedBar := stripANSI(renderProcessAlertBar(alerts, &stale, &collectedAt, 0))
-	if !strings.HasPrefix(strings.TrimSpace(unboundedBar), "LAST ALERT · STALE 2026-08-30T09:07:00+08:00") {
-		t.Fatalf("unbounded rendering should preserve the full historical marker, got %q", unboundedBar)
-	}
-	boundaryBar := stripANSI(renderProcessAlertBar(alerts, &stale, &collectedAt, 28))
-	if !strings.HasPrefix(strings.TrimSpace(boundaryBar), "LAST ALERT · STALE") || strings.Contains(boundaryBar, "2026") {
-		t.Fatalf("partial RFC3339 timestamp should collapse atomically, got %q", boundaryBar)
-	}
-}
-
-func TestRenderProcessAlertBarMarksUnknownFreshnessAsLastKnown(t *testing.T) {
-	alerts := []ProcessAlert{{
-		PID: 10, Name: "node", CPU: 150, Threshold: 100, Window: "5m0s", Status: "active",
-	}}
-
-	bar := stripANSI(renderProcessAlertBar(alerts, nil, nil, 80))
-	if !strings.HasPrefix(strings.TrimSpace(bar), "LAST ALERT · UNKNOWN") {
-		t.Fatalf("unknown-freshness process alert should be last-known, got %q", bar)
 	}
 }
 

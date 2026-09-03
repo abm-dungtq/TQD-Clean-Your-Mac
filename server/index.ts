@@ -16,6 +16,7 @@ import {
   scanDevArtifacts,
   deleteDevArtifacts,
   listInstalledApplications,
+  getEngineVersion,
 } from "./mole_bridge";
 import { externalWatcher } from "./external_watcher";
 
@@ -101,6 +102,91 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse, pathna
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
   }
+}
+
+// Quản lý kiểm tra và bộ nhớ đệm cập nhật phiên bản (GitHub Releases)
+let updateCache: { timestamp: number; data: any } | null = null;
+
+function compareVersions(v1: string, v2: string): number {
+  const parts1 = v1.replace(/^[vV]/, "").split(".").map(n => parseInt(n, 10) || 0);
+  const parts2 = v2.replace(/^[vV]/, "").split(".").map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 > p2) return 1;
+    if (p1 < p2) return -1;
+  }
+  return 0;
+}
+
+async function checkAppUpdates(force = false) {
+  const now = Date.now();
+  if (!force && updateCache && now - updateCache.timestamp < 3600000) {
+    return updateCache.data;
+  }
+
+  const currentAppVersion = "1.0.0";
+  const currentMoleVersion = getEngineVersion();
+
+  let latestAppVersion = currentAppVersion;
+  let releaseUrl = "https://github.com/abm-dungtq/TQD-Clean-Your-Mac/releases";
+  let releaseNotes = "";
+  let publishedAt = "";
+
+  try {
+    const res = await fetch("https://api.github.com/repos/abm-dungtq/TQD-Clean-Your-Mac/releases/latest", {
+      headers: { "User-Agent": "TQD-Clean-Mac-App" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const json: any = await res.json();
+      if (json.tag_name) {
+        latestAppVersion = json.tag_name.replace(/^[vV]/, "");
+        releaseUrl = json.html_url || releaseUrl;
+        releaseNotes = json.body || "";
+        publishedAt = json.published_at || "";
+      }
+    }
+  } catch (e: any) {
+    console.log("[UPDATE CHECK] Không thể kiểm tra GitHub Release TQD-Clean:", e.message);
+  }
+
+  // Kiểm tra phiên bản Mole upstream
+  let latestMoleVersion = currentMoleVersion;
+  try {
+    const res = await fetch("https://api.github.com/repos/tw93/mole/releases/latest", {
+      headers: { "User-Agent": "TQD-Clean-Mac-App" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const json: any = await res.json();
+      if (json.tag_name) {
+        latestMoleVersion = json.tag_name.replace(/^[vV]/, "");
+      }
+    }
+  } catch (e: any) {
+    console.log("[UPDATE CHECK] Không thể kiểm tra GitHub Release tw93/mole:", e.message);
+  }
+
+  const hasAppUpdate = compareVersions(latestAppVersion, currentAppVersion) > 0;
+  const hasMoleUpdate = compareVersions(latestMoleVersion, currentMoleVersion) > 0;
+
+  const data = {
+    hasUpdate: hasAppUpdate || hasMoleUpdate,
+    hasAppUpdate,
+    hasMoleUpdate,
+    currentAppVersion,
+    latestAppVersion,
+    currentMoleVersion,
+    latestMoleVersion,
+    releaseUrl,
+    releaseNotes,
+    publishedAt,
+    checkedAt: new Date().toISOString(),
+  };
+
+  updateCache = { timestamp: now, data };
+  return data;
 }
 
 // Máy chủ HTTP & SSE
@@ -337,6 +423,20 @@ const server = http.createServer(async (req, res) => {
       const apps = listInstalledApplications();
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
       res.end(JSON.stringify({ apps }));
+    } catch (err: any) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 11. GET /api/system/check-update (Kiểm tra bản cập nhật mới từ GitHub Releases)
+  if (pathname === "/api/system/check-update" && req.method === "GET") {
+    try {
+      const force = parsedUrl.query.force === "true";
+      const updateData = await checkAppUpdates(force);
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(updateData));
     } catch (err: any) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err.message }));

@@ -593,3 +593,15 @@ export function listInstalledApplications(): InstalledApp[] {
 
   return apps.sort((a, b) => b.sizeBytes - a.sizeBytes);
 }
+
+export function getEngineVersion(): string {
+  try {
+    const moleFile = path.join(MOLE_DIR, "mole");
+    if (fs.existsSync(moleFile)) {
+      const content = fs.readFileSync(moleFile, "utf-8");
+      const match = content.match(/VERSION="([^"]+)"/);
+      if (match) return match[1];
+    }
+  } catch {}
+  return "1.53.0";
+}

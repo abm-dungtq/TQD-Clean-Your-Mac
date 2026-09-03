@@ -420,88 +420,6 @@ clean_code_editors() {
         safe_clean ~/Library/Application\ Support/CodeBuddy\ CN/logs/* "CodeBuddy CN logs"
     fi
 }
-# Lark / Feishu desktop embeds a Chromium webview (the "aha" explorer profile)
-# to render its in-app docs, sheets, slides, and AI surfaces. Every workspace
-# origin the user opens precaches the full editor bundle into that profile's
-# Service Worker CacheStorage, and stale workspaces plus superseded precache
-# versions are never evicted, so it grows without bound (measured at 27GB across
-# nine origin buckets on a heavy user's machine, oldest files ~11 months old).
-# This lives at a non-standard path the browser cleaners never reach.
-#
-# Reuse the shared Service Worker cleaner so the same per-origin-hash iteration,
-# PROTECTED_SW_DOMAINS skip, user-whitelist honoring, and safe_remove funnel that
-# Chrome and Arc get apply here unchanged. Only CacheStorage is targeted, never
-# the sibling ScriptCache (MV3 worker bytecode). Documents live on Lark's
-# servers and auth lives in Cookies / Local Storage, neither of which this path
-# touches; a cleared editor bundle is re-precached on next open.
-feishu_or_lark_running() {
-    mole_pgrep_any \
-        -x "Feishu" \
-        -x "Lark" \
-        -f '/(Feishu|Lark)[.]app/'
-}
-
-_feishu_service_worker_delete_guard_allows() {
-    mole_clean_process_guard feishu_or_lark_running "Feishu or Lark started"
-}
-
-clean_feishu_service_worker_caches() {
-    local -a sw_roots=(
-        "$HOME/Library/Application Support/LarkShell/aha/users"
-        "$HOME/Library/Application Support/LarkInternational/aha/users"
-    )
-    local -a root_labels=("Feishu" "Lark")
-    local -a cache_paths=()
-    local -a cache_labels=()
-    local root_index sw_root app_label physical_root _profile cache_path physical_cache
-    for ((root_index = 0; root_index < ${#sw_roots[@]}; root_index++)); do
-        sw_root="${sw_roots[$root_index]}"
-        app_label="${root_labels[$root_index]}"
-        [[ -d "$sw_root" ]] || continue
-        physical_root=$(cd -P "$sw_root" 2> /dev/null && pwd -P) || continue
-        if [[ "$physical_root" != "$sw_root" ]]; then
-            debug_log "Refusing symlinked ${app_label} profile root: $sw_root -> $physical_root"
-            continue
-        fi
-        for _profile in "$sw_root"/*/profile_explorer; do
-            [[ -d "$_profile" ]] || continue
-            cache_path="${_profile%/}/Service Worker/CacheStorage"
-            [[ -d "$cache_path" ]] || continue
-            physical_cache=$(cd -P "$cache_path" 2> /dev/null && pwd -P) || continue
-            if [[ "$physical_cache" != "$cache_path" ]]; then
-                debug_log "Refusing symlinked ${app_label} Service Worker cache: $cache_path -> $physical_cache"
-                continue
-            fi
-            cache_paths+=("$cache_path")
-            cache_labels+=("$app_label")
-        done
-    done
-    [[ ${#cache_paths[@]} -gt 0 ]] || return 0
-
-    local _MOLE_CLEAN_GUARD_REASON=""
-    if ! _feishu_service_worker_delete_guard_allows; then
-        mole_report_guard_stop "Feishu/Lark Service Worker" \
-            mole_defer_cleanup_family "Feishu/Lark"
-        return 0
-    fi
-
-    local cleanup_deadline=$((SECONDS + MOLE_TIMEOUT_DISK_VERIFY_SEC))
-    local cache_index guarded_rc=0
-    for ((cache_index = 0; cache_index < ${#cache_paths[@]}; cache_index++)); do
-        app_label="${cache_labels[$cache_index]}"
-        cache_path="${cache_paths[$cache_index]}"
-        guarded_rc=0
-        clean_service_worker_cache "$app_label" "$cache_path" \
-            _feishu_service_worker_delete_guard_allows \
-            "$cleanup_deadline" || guarded_rc=$?
-        if [[ $guarded_rc -eq 75 ]]; then
-            mole_report_guard_stop "Feishu/Lark Service Worker" \
-                mole_defer_cleanup_family "Feishu/Lark"
-            return 0
-        fi
-        [[ $guarded_rc -eq 0 ]] || return "$guarded_rc"
-    done
-}
 # Communication apps.
 clean_communication_apps() {
     safe_clean ~/Library/Application\ Support/discord/Cache/* "Discord cache"
@@ -518,7 +436,6 @@ clean_communication_apps() {
     safe_clean ~/Library/Caches/com.tencent.WeWorkMac/* "WeCom cache"
     safe_clean ~/Library/Caches/com.tencent.qq/* "QQ cache"
     safe_clean ~/Library/Caches/com.feishu.*/* "Feishu cache"
-    clean_feishu_service_worker_caches
     if [[ -d ~/Library/Application\ Support/Microsoft/Teams ]]; then
         safe_clean ~/Library/Application\ Support/Microsoft/Teams/Cache/* "Microsoft Teams legacy cache"
         safe_clean ~/Library/Application\ Support/Microsoft/Teams/Application\ Cache/* "Microsoft Teams legacy application cache"

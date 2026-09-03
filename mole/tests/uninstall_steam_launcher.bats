@@ -111,22 +111,6 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "uninstall_steam_launcher_appid derives executable from a mixed-case app suffix" {
-    app="$HOME/Applications/SteamGame.APP"
-    mkdir -p "$app/Contents/MacOS"
-    printf '#!/bin/bash\nopen steam://run/1091500\n' > "$app/Contents/MacOS/SteamGame"
-    chmod +x "$app/Contents/MacOS/SteamGame"
-
-    run env HOME="$HOME" PROJECT_ROOT="$PROJECT_ROOT" /bin/bash --noprofile --norc <<'EOF'
-set -euo pipefail
-source "$PROJECT_ROOT/lib/uninstall/steam.sh"
-uninstall_steam_launcher_appid "$HOME/Applications/SteamGame.APP"
-EOF
-
-    [ "$status" -eq 0 ] || return 1
-    [[ "$output" == "1091500" ]]
-}
-
 @test "uninstall_app_is_steam_launcher stays false for a regular shell launcher" {
     app="$HOME/Applications/RegularApp.app"
     create_regular_app "$app"

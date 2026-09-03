@@ -1657,26 +1657,6 @@ EOF
 	[[ "$output" == *"found"* ]]
 }
 
-@test "_login_item_app_exists finds nested mixed-case app bundles" {
-	local helper="$HOME/Applications/Roon.APP/Contents/RoonServer.APP"
-	mkdir -p "$helper"
-
-	run env HOME="$HOME" PROJECT_ROOT="$PROJECT_ROOT" /bin/bash --noprofile --norc <<'EOF'
-set -euo pipefail
-source "$PROJECT_ROOT/lib/core/common.sh"
-source "$PROJECT_ROOT/lib/optimize/tasks.sh"
-mdfind() { return 1; }
-sfltool() { return 1; }
-export -f mdfind sfltool
-if _login_item_app_exists "RoonServer"; then
-    echo "found"
-fi
-EOF
-
-	[ "$status" -eq 0 ]
-	[[ "$output" == *"found"* ]]
-}
-
 @test "_login_item_app_exists finds nested helper apps by bundle display name" {
 	local helper="$HOME/Applications/Adobe Acrobat DC.app/Contents/Helpers/AdobeResourceSynchronizer.app"
 	mkdir -p "$helper/Contents"

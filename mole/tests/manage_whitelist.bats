@@ -389,17 +389,6 @@ EOF
     [[ "$output" == *"Chrome browser cache|\$HOME/Library/Caches/Google/Chrome/*|browser_cache"* ]] || return 1
 }
 
-@test "whitelist inventory exposes Final Cut Pro proxy media (#1499)" {
-    run env HOME="$HOME" PROJECT_ROOT="$PROJECT_ROOT" /bin/bash --noprofile --norc << 'EOF'
-set -euo pipefail
-source "$PROJECT_ROOT/lib/manage/whitelist.sh"
-get_all_cache_items
-EOF
-
-    [ "$status" -eq 0 ] || return 1
-    [[ "$output" == *"Final Cut Pro proxy media (render files still cleaned)|\$HOME/Movies/*.fcpbundle/*/Transcoded Media/Proxy Media|app_cache"* ]] || return 1
-}
-
 @test "mo clean --whitelist persists selections" {
     whitelist_file="$HOME/.config/mole/whitelist"
     mkdir -p "$(dirname "$whitelist_file")"

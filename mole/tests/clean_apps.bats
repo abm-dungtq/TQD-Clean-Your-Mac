@@ -347,7 +347,7 @@ if [ "${1:-}" != "-maxdepth" ] ||
     [ "${2:-}" != "3" ] ||
     [ "${3:-}" != "-type" ] ||
     [ "${4:-}" != "d" ] ||
-    [ "${5:-}" != "-iname" ] ||
+    [ "${5:-}" != "-name" ] ||
     [ "${6:-}" != "*.app" ]; then
     exit 64
 fi
@@ -2953,38 +2953,6 @@ if scan_installed_apps "$HOME/installed2.txt"; then
 	echo "CORRUPT_NOT_FAILED"; exit 1
 fi
 EOF
-	[ "$status" -eq 0 ] || {
-		echo "$output"
-		return 1
-	}
-}
-
-@test "installed-app scan reads mixed-case outer and wrapped app bundles" {
-	run env HOME="$HOME" PROJECT_ROOT="$PROJECT_ROOT" MOLE_TEST_MODE=1 /bin/bash --noprofile --norc << 'EOF'
-set -euo pipefail
-source "$PROJECT_ROOT/lib/core/common.sh"
-source "$PROJECT_ROOT/lib/clean/apps.sh"
-rm -f "$HOME/.cache/mole/installed_apps_cache"
-
-apps="$HOME/Applications"
-rm -rf "$apps"
-mkdir -p "$apps/Upper.APP/Contents" "$apps/Wrapped.APP/Wrapper/Inner.APP"
-plist() {
-	cat > "$1" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>$2</dict></plist>
-PLIST
-}
-plist "$apps/Upper.APP/Contents/Info.plist" '<key>CFBundleIdentifier</key><string>com.example.upper</string>'
-plist "$apps/Wrapped.APP/Wrapper/Inner.APP/Info.plist" '<key>CFBundleIdentifier</key><string>com.example.wrapped-upper</string>'
-
-debug_log() { :; }
-scan_installed_apps "$HOME/installed.txt" || { echo "SCAN_FAILED"; exit 1; }
-grep -Fxq "com.example.upper" "$HOME/installed.txt" || { echo "MISSING_UPPER"; exit 1; }
-grep -Fxq "com.example.wrapped-upper" "$HOME/installed.txt" || { echo "MISSING_WRAPPED_UPPER"; exit 1; }
-EOF
-
 	[ "$status" -eq 0 ] || {
 		echo "$output"
 		return 1

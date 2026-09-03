@@ -114,11 +114,10 @@ set -euo pipefail
 source "$PROJECT_ROOT/lib/core/common.sh"
 official_uninstaller_vendor "com.crowdstrike.falcon.UserAgent" "Falcon" "/Applications/Falcon.app"
 official_uninstaller_vendor "com.jamf.management.Jamf" "Jamf Connect" "/Applications/Jamf Connect.app"
-official_uninstaller_vendor "" "Unknown" "/Applications/CrowdStrike Falcon.APP"
 EOF
 	)"
 
-	[[ "$(printf '%s\n' "$result" | grep -cFx 'CrowdStrike')" -eq 2 ]] || { echo "missed CrowdStrike"; exit 1; }
+	[[ "$result" == *"CrowdStrike"* ]] || { echo "missed CrowdStrike"; exit 1; }
 	[[ "$result" == *"Jamf"* ]] || { echo "missed Jamf"; exit 1; }
 }
 

@@ -384,14 +384,9 @@ start_inline_spinner() {
         (
             local stop_file="$INLINE_SPINNER_STOP_FILE"
             local msg_file="$INLINE_SPINNER_MSG_FILE"
-            local frames=()
-            local frame=""
-            while IFS= read -r frame; do
-                [[ -n "$frame" ]] && frames[${#frames[@]}]="$frame"
-            done < <(mo_spinner_chars)
-            if [[ ${#frames[@]} -eq 0 ]]; then
-                frames=("|" "/" "-" "\\")
-            fi
+            local chars
+            chars="$(mo_spinner_chars)"
+            [[ -z "$chars" ]] && chars="|/-\\"
             local i=0
             local current_message="$display_message"
             local next_message=""
@@ -401,7 +396,7 @@ start_inline_spinner() {
 
             # Cooperative exit: check for stop file instead of relying on signals
             while [[ ! -f "$stop_file" ]]; do
-                local c="${frames[$((i % ${#frames[@]}))]}"
+                local c="${chars:$((i % ${#chars})):1}"
                 # Re-read the message each frame; erase the line only when the
                 # text changed (a shorter message would leave remnants), and
                 # keep erase + redraw in one write so no blank frame shows.
@@ -416,7 +411,7 @@ start_inline_spinner() {
                 # Output to stderr to avoid interfering with stdout
                 printf "${frame_lead}${MOLE_SPINNER_PREFIX:-}${BLUE}%s${NC} %s" "$c" "$current_message" >&2 || break
                 i=$((i + 1))
-                /bin/sleep 0.08
+                /bin/sleep 0.05
             done
 
             # Clean up stop file before exiting
@@ -494,7 +489,7 @@ update_inline_spinner_message() {
 
 # Get spinner characters
 mo_spinner_chars() {
-    printf "%s\n" "⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"
+    printf "%s" "|/-\\"
 }
 
 # Format relative time for compact display (e.g., 3d ago)

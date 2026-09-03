@@ -43,61 +43,27 @@ check_tcc_permissions() {
     ensure_user_file "$permission_flag"
     return 0
 }
-# Args: $1=browser_name, $2=cache_path, $3=optional post-size guard callback,
-#       $4=optional absolute SECONDS deadline shared by a larger cleanup family
+# Args: $1=browser_name, $2=cache_path, $3=optional post-size guard callback
 # Clean Service Worker cache while protecting critical web editors.
 clean_service_worker_cache() {
     local browser_name="$1"
-    local cache_path="${2%/}"
+    local cache_path="$2"
     local delete_guard="${3:-}"
-    local deadline_seconds="${4:-}"
     [[ ! -d "$cache_path" ]] && return 0
-
-    # A lexical CacheStorage path below Application Support is not enough
-    # authority for recursive deletion. Refuse a root reached through any
-    # symlink so find and the later sink stay inside the profile we inspected.
-    local physical_cache_path=""
-    physical_cache_path=$(cd -P "$cache_path" 2> /dev/null && pwd -P) || return 1
-    if [[ "$physical_cache_path" != "$cache_path" ]]; then
-        debug_log "Refusing symlinked Service Worker cache root: $cache_path -> $physical_cache_path"
-        return 1
-    fi
-
-    # Materialize the complete producer result before the first sink. A timed
-    # out find may have printed a valid prefix, but that prefix is not a safe
-    # deletion plan and must be discarded as a unit.
-    local candidates_file=""
-    candidates_file=$(create_temp_file 2> /dev/null) || return 1
-    local find_timeout=""
-    local find_rc=0
-    find_timeout=$(_mole_timeout_with_deadline \
-        "$MOLE_TIMEOUT_PKG_LIST_SEC" "$deadline_seconds") || find_rc=$?
-    if [[ $find_rc -eq 0 ]]; then
-        # shellcheck disable=SC2016
-        run_with_timeout "$find_timeout" sh -c \
-            'find "$1" -type d -depth 2 2>/dev/null' _ "$cache_path" \
-            > "$candidates_file" || find_rc=$?
-    fi
-    if [[ $find_rc -ne 0 ]]; then
-        debug_log "Service Worker cache discovery failed for $cache_path (status $find_rc)"
-        _mole_record_clean_cancellation "$find_rc"
-        return "$find_rc"
-    fi
-
     local cleaned_size=0
     local protected_count=0
     local guard_stopped=false
+    # shellcheck disable=SC2016
     while IFS= read -r cache_dir; do
         [[ ! -d "$cache_dir" ]] && continue
-        [[ "$cache_dir" == "$cache_path/"* ]] || return 1
-        if [[ -n "$deadline_seconds" && $SECONDS -ge $deadline_seconds ]]; then
-            _mole_record_clean_cancellation 124
-            return 124
-        fi
-
         # Extract a best-effort domain name from cache folder.
-        local domain=""
-        domain=$(basename "$cache_dir" | grep -oE '[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}' | head -1 || echo "")
+        local domain=$(basename "$cache_dir" | grep -oE '[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}' | head -1 || echo "")
+        local size=0
+        local _du_out
+        if _du_out=$(run_with_timeout "$MOLE_TIMEOUT_MEDIUM_PROBE_SEC" du -skP "$cache_dir" 2> /dev/null); then
+            local _sz="${_du_out%%[^0-9]*}"
+            [[ "$_sz" =~ ^[0-9]+$ ]] && size="$_sz"
+        fi
         local is_protected=false
         for protected_domain in "${PROTECTED_SW_DOMAINS[@]}"; do
             if [[ "$domain" == *"$protected_domain"* ]]; then
@@ -115,63 +81,20 @@ clean_service_worker_cache() {
             protected_count=$((protected_count + 1))
         fi
         if [[ "$is_protected" == "false" ]]; then
-            _mole_snapshot_path_identity "$cache_dir" || continue
-            local expected_parent="$_MOLE_PATH_SNAPSHOT_PARENT"
-            local expected_parent_id="$_MOLE_PATH_SNAPSHOT_PARENT_ID"
-            local expected_target_id="$_MOLE_PATH_SNAPSHOT_TARGET_ID"
-            case "$expected_parent" in
-                "$physical_cache_path" | "$physical_cache_path"/*) ;;
-                *)
-                    debug_log "Refusing Service Worker candidate outside cache root: $cache_dir -> $expected_parent"
-                    return 1
-                    ;;
-            esac
-
-            local size=0
-            local _du_out=""
-            local du_timeout=""
-            local du_rc=0
-            du_timeout=$(_mole_timeout_with_deadline \
-                "$MOLE_TIMEOUT_MEDIUM_PROBE_SEC" "$deadline_seconds") || du_rc=$?
-            if [[ $du_rc -eq 0 ]]; then
-                _du_out=$(run_with_timeout "$du_timeout" du -skP "$cache_dir" 2> /dev/null) || du_rc=$?
-            fi
-            if [[ $du_rc -eq 124 || $du_rc -ge 128 ]]; then
-                _mole_record_clean_cancellation "$du_rc"
-                return "$du_rc"
-            fi
-            if [[ $du_rc -eq 0 ]]; then
-                local _sz="${_du_out%%[^0-9]*}"
-                [[ "$_sz" =~ ^[0-9]+$ ]] && size="$_sz"
-            fi
-
             if [[ -n "$delete_guard" ]] && ! "$delete_guard"; then
                 guard_stopped=true
                 break
-            fi
-            if ! _mole_path_matches_identity \
-                "$cache_dir" "$expected_parent" "$expected_parent_id" \
-                "$expected_target_id"; then
-                debug_log "Skipping Service Worker cache after identity changed: $cache_dir"
-                continue
             fi
             if [[ "$DRY_RUN" == "true" ]]; then
                 if declare -f record_dry_run_cleanup_target > /dev/null 2>&1; then
                     record_dry_run_cleanup_target "$cache_dir" "$size" 1 true || continue
                 fi
-            else
-                local remove_rc=0
-                safe_remove "$cache_dir" true "$size" "$deadline_seconds" \
-                    "$expected_parent" "$expected_parent_id" \
-                    "$expected_target_id" || remove_rc=$?
-                if [[ $remove_rc -eq 124 || $remove_rc -ge 128 ]]; then
-                    return "$remove_rc"
-                fi
-                [[ $remove_rc -eq 0 ]] || continue
+            elif ! safe_remove "$cache_dir" true "$size"; then
+                continue
             fi
             cleaned_size=$((cleaned_size + size))
         fi
-    done < "$candidates_file"
+    done < <(run_with_timeout "$MOLE_TIMEOUT_PKG_LIST_SEC" sh -c 'find "$1" -type d -depth 2 2>/dev/null || true' _ "$cache_path")
     if [[ $cleaned_size -gt 0 ]]; then
         local spinner_was_running=false
         if [[ -t 1 && -n "${INLINE_SPINNER_PID:-}" ]]; then

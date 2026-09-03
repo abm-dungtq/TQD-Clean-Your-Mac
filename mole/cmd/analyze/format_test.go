@@ -11,14 +11,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func TestSpinnerFramesHaveSingleColumnWidth(t *testing.T) {
-	for _, frame := range spinnerFrames {
-		if got := displayWidth(frame); got != 1 {
-			t.Errorf("spinner frame %q width = %d, want 1", frame, got)
-		}
-	}
-}
-
 func TestRuneWidth(t *testing.T) {
 	tests := []struct {
 		name  string

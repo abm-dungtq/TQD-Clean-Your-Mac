@@ -2264,7 +2264,7 @@ _mole_path_is_immediate_child_of() {
 _mole_path_is_application_bundle() {
     local path="${1%/}"
     _mole_path_is_immediate_child_of "$path" "/Applications" &&
-        [[ "${path##*/}" == *.[aA][pP][pP] ]]
+        [[ "${path##*/}" == *.app ]]
 }
 
 # Finder and third-party Trash helpers can fail on app bundles and TCC-managed
@@ -3485,7 +3485,7 @@ get_path_size_kb() {
     # on the same physical-size basis as the directory fallback; logical size
     # can be much larger for APFS-cloned bundles and must not be mixed into the
     # same total as `du` results (#1404).
-    if [[ "$path" == *.[aA][pP][pP] || "$path" == *.[aA][pP][pP]/ ]]; then
+    if [[ "$path" == *.app || "$path" == *.app/ ]]; then
         local mdls_size
         local mdls_timeout=""
         local mdls_deadline_rc=0
