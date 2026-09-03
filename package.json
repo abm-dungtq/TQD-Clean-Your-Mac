@@ -1,0 +1,20 @@
+{
+  "name": "tqd-clean-your-mac",
+  "version": "1.53.0",
+  "description": "Hệ thống Quản lý, Dọn dẹp & Tối ưu hóa macOS với Giao diện Cyber-HUD 100% Tiếng Việt (Kế thừa tw93/mole)",
+  "author": "TQD (0976202028)",
+  "license": "GPL-3.0",
+  "scripts": {
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "bash scripts/build-backend.sh",
+    "build:app": "bash scripts/build-app-bundle.sh",
+    "build:dmg": "bash scripts/package-dmg.sh",
+    "build:all": "npm run build:frontend && npm run build:backend && npm run build:app && npm run build:dmg",
+    "test:field": "bash tests/verify-zero-terminal.sh",
+    "start": "./tqd-clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abm-dungtq/TQD-Clean-Your-Mac.git"
+  }
+}

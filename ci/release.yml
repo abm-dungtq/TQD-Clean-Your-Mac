@@ -1,0 +1,50 @@
+name: Release TQD-Clean DMG
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Environment
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Frontend Cyber-HUD
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Build Standalone Backend
+        run: bash scripts/build-backend.sh
+
+      - name: Build Native App Bundle
+        run: bash scripts/build-app-bundle.sh
+
+      - name: Package DMG
+        run: bash scripts/package-dmg.sh
+
+      - name: Run Zero-Terminal Field Verification
+        run: bash tests/verify-zero-terminal.sh
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist-package/TQD-Clean-Your-Mac.dmg
+          name: Release ${{ github.ref_name }} - TQD-Clean Your Mac
+          draft: false
+          prerelease: false
+          generate_release_notes: true

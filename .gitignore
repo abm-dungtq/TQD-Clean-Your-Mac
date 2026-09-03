@@ -1,0 +1,28 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Build Outputs & Distribution Packages
+build/
+dist-package/
+*.app
+*.dmg
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend Build Dist
+frontend/dist/
+
+# Temporary and Log files
+*.log
+scratch/
+.env.local
+.env.*.local

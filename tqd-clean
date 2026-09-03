@@ -1,0 +1,39 @@
+#!/bin/bash
+# ==============================================================================
+# TQD-Clean Your Mac: Giao diện Webapp Tiếng Việt Tối Ưu & Dọn Dẹp macOS
+# Lõi: tw93/mole | Phong cách: Cyber-Glassmorphism HUD (Stitch MCP)
+# ==============================================================================
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PORT="${PORT:-42100}"
+
+echo "=========================================================="
+echo "   🛡️   TQD-CLEAN YOUR MAC - HỆ THỐNG TỐI ƯU HÓA MAC   "
+echo "=========================================================="
+
+# Kiểm tra runtime (Bun hoặc Node)
+RUNTIME=""
+if command -v bun >/dev/null 2>&1; then
+    RUNTIME="bun"
+elif command -v node >/dev/null 2>&1; then
+    RUNTIME="node"
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+    RUNTIME="$HOME/.bun/bin/bun"
+else
+    echo "❌ Lỗi: Cần cài đặt Bun hoặc Node.js để chạy TQD-Clean Your Mac."
+    exit 1
+fi
+
+echo "🚀 Khởi động dịch vụ qua runtime: $RUNTIME"
+
+# Kiểm tra nếu frontend chưa build thì build tự động
+if [ ! -d "$SCRIPT_DIR/frontend/dist" ]; then
+    echo "📦 Biên dịch gói giao diện Cyber-HUD lần đầu..."
+    (cd "$SCRIPT_DIR/frontend" && npm run build)
+fi
+
+echo "🌐 Đang mở bảng điều khiển TQD-Clean Your Mac..."
+cd "$SCRIPT_DIR"
+exec $RUNTIME run server/index.ts
