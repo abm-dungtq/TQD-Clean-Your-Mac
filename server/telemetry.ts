@@ -1,4 +1,5 @@
 import { execSync } from "child_process";
+import fs from "fs";
 
 export interface SystemTelemetry {
   cpu: {
@@ -97,17 +98,21 @@ export function getTelemetry(): SystemTelemetry {
   let diskAvailable = 156 * 1024 * 1024 * 1024;
   let diskUsagePercent = 40;
   try {
-    const dfOut = execSync("df -k /", { encoding: "utf8" }).trim().split("\n");
+    // Trên macOS (APFS), / là System snapshot chỉ vài GB.
+    // /System/Volumes/Data chứa toàn bộ dữ liệu người dùng & ứng dụng.
+    // Các Volume trong cùng APFS Container chia sẻ chung dung lượng khả dụng.
+    const targetMount = fs.existsSync("/System/Volumes/Data") ? "/System/Volumes/Data" : "/";
+    const dfOut = execSync(`df -k "${targetMount}"`, { encoding: "utf8" }).trim().split("\n");
     if (dfOut.length > 1) {
       const parts = dfOut[1].split(/\s+/);
       const totalBlocks = parseInt(parts[1], 10) * 1024;
-      const usedBlocks = parseInt(parts[2], 10) * 1024;
       const availBlocks = parseInt(parts[3], 10) * 1024;
-      if (!isNaN(totalBlocks) && totalBlocks > 0) {
+      if (!isNaN(totalBlocks) && totalBlocks > 0 && !isNaN(availBlocks)) {
         diskTotal = totalBlocks;
-        diskUsed = usedBlocks;
         diskAvailable = availBlocks;
-        diskUsagePercent = Math.round((diskUsed / diskTotal) * 100);
+        // Dung lượng thực tế đã dùng = Tổng dung lượng Container - Dung lượng còn trống
+        diskUsed = Math.max(0, diskTotal - diskAvailable);
+        diskUsagePercent = Math.min(100, Math.round((diskUsed / diskTotal) * 100));
       }
     }
   } catch {}

@@ -110,16 +110,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* CPU Card */}
         <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-cyan/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-cyan">
-              <Cpu className="w-4 h-4" /> VI XỬ LÝ (CPU)
+            <span className="flex items-center gap-1.5 text-cyber-cyan font-semibold whitespace-nowrap">
+              <Cpu className="w-4 h-4 shrink-0" /> VI XỬ LÝ (CPU)
             </span>
-            <span>[CPU_CORE]</span>
+            <span className="text-[10px] text-[#849495] shrink-0">[CPU]</span>
           </div>
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-3xl font-hud font-bold text-white">
               {telemetry?.cpu.totalUsage ?? 0}<span className="text-sm font-normal text-[#849495]">%</span>
             </span>
-            <span className="text-xs text-[#849495] font-mono">
+            <span className="text-xs text-[#849495] font-mono font-medium">
               User: {telemetry?.cpu.user ?? 0}%
             </span>
           </div>
@@ -138,17 +138,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* RAM Card */}
         <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-purple/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-purple">
-              <Layers className="w-4 h-4" /> BỘ NHỚ RAM
+            <span className="flex items-center gap-1.5 text-cyber-purple font-semibold whitespace-nowrap">
+              <Layers className="w-4 h-4 shrink-0" /> BỘ NHỚ RAM
             </span>
             <button
               onClick={onQuickPurgeRam}
               disabled={isPurgingRam}
-              className="px-2 py-0.5 rounded bg-cyber-purple/20 hover:bg-cyber-purple text-cyber-purple hover:text-black text-[10px] font-mono transition-colors font-bold flex items-center gap-1"
+              className="px-2 py-0.5 rounded bg-cyber-purple/20 hover:bg-cyber-purple text-cyber-purple hover:text-black text-[10px] font-mono transition-colors font-bold flex items-center gap-1 shrink-0"
               title="Giải phóng bộ nhớ RAM không hoạt động"
             >
               <Zap className="w-3 h-3" />
-              {isPurgingRam ? "Đang xả..." : "Giải phóng"}
+              {isPurgingRam ? "Đang xả..." : "Xả RAM"}
             </button>
           </div>
           <div className="flex items-baseline justify-between mb-2">
@@ -156,7 +156,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {telemetry ? formatGb(telemetry.memory.usedBytes) : 0}
               <span className="text-sm font-normal text-[#849495]"> / {telemetry ? formatGb(telemetry.memory.totalBytes) : 0} GB</span>
             </span>
-            <span className="text-xs text-cyber-purple font-mono">
+            <span className="text-xs text-cyber-purple font-mono font-bold">
               {telemetry?.memory.usagePercent ?? 0}%
             </span>
           </div>
@@ -166,7 +166,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               style={{ width: `${telemetry?.memory.usagePercent ?? 0}%` }}
             ></div>
           </div>
-          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between">
+          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between items-center">
             <span>Active: {telemetry ? formatGb(telemetry.memory.activeBytes) : 0} GB</span>
             <span>Free: {telemetry ? formatGb(telemetry.memory.freeBytes) : 0} GB</span>
           </div>
@@ -175,17 +175,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* SSD Card */}
         <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-green/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-green">
-              <HardDrive className="w-4 h-4" /> Ổ CỨNG SSD
+            <span className="flex items-center gap-1.5 text-cyber-green font-semibold whitespace-nowrap">
+              <HardDrive className="w-4 h-4 shrink-0" /> Ổ CỨNG SSD
             </span>
-            <span>[NVMe_SSD]</span>
+            <span className="text-[10px] text-[#849495] shrink-0">[NVMe]</span>
           </div>
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-3xl font-hud font-bold text-white">
               {telemetry ? formatGb(telemetry.disk.availableBytes) : 0}
               <span className="text-sm font-normal text-[#849495]"> GB trống</span>
             </span>
-            <span className="text-xs text-cyber-green font-mono">
+            <span className="text-xs text-cyber-green font-mono font-bold">
               {telemetry?.disk.usagePercent ?? 0}% dùng
             </span>
           </div>
@@ -195,25 +195,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
               style={{ width: `${telemetry?.disk.usagePercent ?? 0}%` }}
             ></div>
           </div>
-          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between">
-            <span>Tổng dung lượng:</span>
-            <span>{telemetry ? formatGb(telemetry.disk.totalBytes) : 0} GB</span>
+          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between items-center">
+            <span>Đã dùng: {telemetry ? formatGb(telemetry.disk.usedBytes) : 0} GB</span>
+            <span>Tổng: {telemetry ? formatGb(telemetry.disk.totalBytes) : 0} GB</span>
           </div>
         </div>
 
         {/* Battery & System Card */}
         <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-amber/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-amber">
-              <Battery className="w-4 h-4" /> PIN & NGUỒN ĐIỆN
+            <span className="flex items-center gap-1.5 text-cyber-amber font-semibold whitespace-nowrap">
+              <Battery className="w-4 h-4 shrink-0" /> PIN & NGUỒN
             </span>
-            <span>[POWER_MGMT]</span>
+            <span className="text-[10px] text-[#849495] shrink-0">[POWER]</span>
           </div>
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-3xl font-hud font-bold text-white">
               {telemetry?.battery?.percentage ?? 100}<span className="text-sm font-normal text-[#849495]">%</span>
             </span>
-            <span className="text-xs text-cyber-green font-mono">
+            <span className="text-xs text-cyber-green font-mono font-bold">
               {telemetry?.battery?.isCharging ? "Đang sạc" : "Ổn định"}
             </span>
           </div>
