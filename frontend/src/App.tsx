@@ -214,12 +214,12 @@ export const App: React.FC = () => {
       setActiveCategoryId(null);
       setSessionSource(null);
 
-      // Hiệu ứng pháo hoa ăn mừng
+      // Hiệu ứng pháo hoa ăn mừng chuẩn màu Apple
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ["#00f2ff", "#bc13fe", "#00ff9f"],
+        colors: ["#007AFF", "#5856D6", "#34C759", "#FF9500"],
       });
 
       // Quét lại hệ thống
@@ -264,12 +264,12 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#050505] text-white font-sans overflow-hidden select-none">
+    <div className="flex h-screen bg-macos-canvas text-macos-text-primary font-sans overflow-hidden select-none">
       {/* Sidebar Navigation */}
       <Sidebar currentTab={currentTab} onSelectTab={setCurrentTab} isScanning={isScanning} />
 
       {/* Main Content Viewport */}
-      <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+      <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 pt-10">
         {currentTab === "dashboard" && (
           <Dashboard
             telemetry={telemetry}

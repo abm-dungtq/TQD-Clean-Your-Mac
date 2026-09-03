@@ -162,7 +162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         win.title = "TQD-Clean Your Mac"
         win.titlebarAppearsTransparent = true
         win.titleVisibility = .hidden
-        win.backgroundColor = NSColor(red: 0.02, green: 0.02, blue: 0.03, alpha: 1.0)
+        win.backgroundColor = NSColor(red: 245.0/255.0, green: 245.0/255.0, blue: 247.0/255.0, alpha: 1.0)
         win.isMovableByWindowBackground = true
         win.minSize = NSSize(width: 960, height: 640)
         win.delegate = self
@@ -173,7 +173,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         let web = WKWebView(frame: win.contentView!.bounds, configuration: config)
         web.autoresizingMask = [.width, .height]
-        web.setValue(false, forKey: "drawsBackground") // Nền trong suốt đón nhận cyber theme
+        web.setValue(false, forKey: "drawsBackground") // Nền trong suốt đồng điệu màu canvas macOS
         
         win.contentView?.addSubview(web)
         self.webView = web

@@ -34,233 +34,283 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const formatGb = (bytes: number) => (bytes / (1024 * 1024 * 1024)).toFixed(1);
 
   const healthScore = telemetry?.healthScore ?? 92;
-  let healthColor = "text-cyber-green border-cyber-green/40 bg-cyber-green/10";
-  if (healthScore < 60) healthColor = "text-cyber-red border-cyber-red/40 bg-cyber-red/10";
-  else if (healthScore < 85) healthColor = "text-cyber-amber border-cyber-amber/40 bg-cyber-amber/10";
+  const healthStatus = telemetry?.healthStatus || (healthScore >= 85 ? "Hệ thống Tối ưu" : healthScore >= 60 ? "Cần Chú Ý" : "Cần Dọn Dẹp Ngay");
+
+  // Tính toán stroke dash cho vòng tròn điểm sức khỏe (bán kính 38, chu vi ~ 238.76)
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (healthScore / 100) * circumference;
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Banner: Hero Radar & Health Score */}
-      <div className="relative overflow-hidden rounded-2xl glass-panel p-8 border border-cyber-cyan/20">
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-cyber-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-cyber-purple/10 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Top Action Toolbar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-macos-text-primary tracking-tight">Tổng quan hệ thống</h2>
+          <p className="text-xs text-macos-text-secondary mt-0.5">Giám sát tài nguyên và bảo trì hiệu năng macOS</p>
+        </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          {/* Left Text */}
-          <div className="space-y-3 max-w-xl text-center md:text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-cyber-cyan/30 bg-cyber-cyan/5 text-xs font-mono text-cyber-cyan">
-              <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
-              <span>CHẾ ĐỘ GIÁM SÁT THỜI GIAN THỰC</span>
-            </div>
-            <h2 className="text-3xl font-hud font-bold text-white tracking-wide">
-              BẢNG ĐIỀU KHIỂN HỆ THỐNG
-            </h2>
-            <p className="text-sm text-[#b9cacb] leading-relaxed font-sans">
-              Dọn dẹp tệp rác, giải phóng bộ nhớ RAM, gỡ bỏ tàn dư ứng dụng mồ côi và tối ưu hóa hiệu năng macOS của bạn dựa trên động cơ Mole Core.
-            </p>
-            <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <div className={`px-4 py-2 rounded-xl border font-mono text-sm font-bold flex items-center gap-2 ${healthColor}`}>
-                <Activity className="w-4 h-4" />
-                <span>Điểm Sức Khỏe: {healthScore}/100</span>
-                <span className="text-xs font-normal">({telemetry?.healthStatus || "TỐI ƯU"})</span>
-              </div>
-              {reclaimableSize && (
-                <div className="px-4 py-2 rounded-xl border border-cyber-purple/40 bg-cyber-purple/10 font-mono text-sm text-cyber-purple flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Có thể giải phóng: ~{reclaimableSize}</span>
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={onQuickPurgeRam}
+            disabled={isPurgingRam}
+            className="px-4 py-2 rounded-full bg-white hover:bg-[#F9F9FB] text-macos-text-primary border border-macos-border text-xs font-semibold shadow-macos-card transition-all flex items-center gap-1.5 active:scale-98"
+            title="Giải phóng bộ nhớ RAM không hoạt động"
+          >
+            <Zap className="w-3.5 h-3.5 text-macos-amber" />
+            <span>{isPurgingRam ? "Đang xả..." : "XẢ RAM NHANH"}</span>
+          </button>
 
-          {/* Right: Radar Scanning Button */}
-          <div className="relative flex items-center justify-center">
-            {/* Concentric Pulsing Radar Rings */}
-            <div className="relative flex items-center justify-center w-52 h-52">
-              <div className={`absolute inset-0 rounded-full border border-cyber-cyan/20 ${isScanning ? "animate-ping" : ""}`}></div>
-              <div className="absolute inset-3 rounded-full border border-cyber-cyan/30"></div>
-              <div className="absolute inset-8 rounded-full border border-dashed border-cyber-cyan/40 animate-radar-spin"></div>
-              <div className="absolute inset-14 rounded-full border border-cyber-purple/30"></div>
-
-              {/* Central Trigger Button */}
-              <button
-                onClick={onTriggerScan}
-                disabled={isScanning}
-                className={`relative z-20 w-32 h-32 rounded-full flex flex-col items-center justify-center font-hud font-bold text-center transition-all transform active:scale-95 shadow-2xl ${
-                  isScanning
-                    ? "bg-cyber-cyan/20 text-cyber-cyan border-2 border-cyber-cyan shadow-neon-cyan cursor-wait"
-                    : "bg-void hover:bg-cyber-cyan/15 text-white hover:text-cyber-cyan border-2 border-cyber-cyan hover:shadow-neon-cyan group cursor-pointer"
-                }`}
-              >
-                <RefreshCw className={`w-8 h-8 mb-1.5 transition-transform duration-700 ${isScanning ? "animate-spin text-cyber-cyan" : "group-hover:rotate-180 text-cyber-cyan"}`} />
-                <span className="text-[11px] uppercase tracking-wider font-bold">
-                  {isScanning ? "Đang quét..." : "QUÉT TOÀN DIỆN"}
-                </span>
-                <span className="text-[9px] text-[#849495] font-mono tracking-tighter mt-0.5">
-                  {isScanning ? "Vui lòng đợi" : "1-Click Scan"}
-                </span>
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={onTriggerScan}
+            disabled={isScanning}
+            className="px-5 py-2 rounded-full bg-macos-blue hover:bg-macos-blue-hover text-white text-xs font-semibold shadow-macos-button transition-all flex items-center gap-2 active:scale-98"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? "animate-spin" : ""}`} />
+            <span>{isScanning ? "Đang phân tích..." : "QUÉT TOÀN BỘ HỆ THỐNG"}</span>
+          </button>
         </div>
       </div>
 
-      {/* Realtime Telemetry Grid */}
+      {/* Hero Health Score Card (Stitch Cupertino Style) */}
+      <div className="bg-white border border-macos-border rounded-2xl p-6 shadow-macos-card flex flex-col md:flex-row items-center gap-6 md:gap-8">
+        {/* Circular Gauge */}
+        <div className="relative flex items-center justify-center shrink-0 w-28 h-28">
+          <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+            {/* Background Track */}
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              className="text-[#E5E5EA]"
+              strokeWidth="8"
+              stroke="currentColor"
+              fill="transparent"
+            />
+            {/* Progress Arc */}
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              className="text-macos-blue transition-all duration-1000 ease-out"
+              strokeWidth="8"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              stroke="currentColor"
+              fill="transparent"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-bold text-macos-text-primary tracking-tight">{healthScore}</span>
+            <span className="text-[11px] font-medium text-macos-text-secondary">/ 100</span>
+          </div>
+        </div>
+
+        {/* Health Description & Details */}
+        <div className="flex-1 text-center md:text-left space-y-1.5">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+            <h3 className="text-xl font-bold text-macos-text-primary">{healthStatus}</h3>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-macos-green-subtle text-[#248A3D] border border-macos-green/20">
+              Ổn định
+            </span>
+          </div>
+          <p className="text-xs text-macos-text-secondary leading-relaxed max-w-2xl">
+            Mac của bạn đang trong tình trạng hoạt động tối ưu. Hệ thống phân tích không phát hiện mối đe dọa hoặc rác nghiêm trọng. Các tiến trình nền đang sử dụng tài nguyên cân bằng.
+          </p>
+          {reclaimableSize && (
+            <div className="pt-1 flex items-center gap-2">
+              <span className="text-xs text-macos-text-secondary">Dung lượng có thể giải phóng:</span>
+              <span className="text-xs font-bold text-macos-blue bg-macos-blue-subtle px-2 py-0.5 rounded-md">
+                ~{reclaimableSize}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Realtime Telemetry Grid (4 Cupertino Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* CPU Card */}
-        <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-cyan/20 relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-cyan font-semibold whitespace-nowrap">
-              <Cpu className="w-4 h-4 shrink-0" /> VI XỬ LÝ (CPU)
-            </span>
-            <span className="text-[10px] text-[#849495] shrink-0">[CPU]</span>
+        <div className="bg-white rounded-2xl p-5 border border-macos-border shadow-macos-card hover:shadow-macos-card-hover transition-all relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-macos-text-secondary text-xs font-medium mb-3">
+              <span className="flex items-center gap-1.5 text-macos-text-primary font-semibold">
+                <Cpu className="w-4 h-4 text-macos-blue shrink-0" /> CPU
+              </span>
+              <span className="text-[11px] font-mono text-macos-text-caption">Apple Silicon</span>
+            </div>
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-3xl font-bold text-macos-text-primary tracking-tight">
+                {telemetry?.cpu.totalUsage ?? 0}<span className="text-sm font-normal text-macos-text-secondary">%</span>
+              </span>
+              <span className="text-xs text-macos-text-secondary font-mono font-medium">
+                User: {telemetry?.cpu.user ?? 0}%
+              </span>
+            </div>
+            
+            {/* Sparkline Wave SVG */}
+            <div className="h-8 w-full my-1">
+              <svg className="w-full h-full" viewBox="0 0 100 25" preserveAspectRatio="none">
+                <path
+                  d="M0,20 Q20,24 35,12 T70,16 T100,6"
+                  fill="none"
+                  stroke="#007AFF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
           </div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-3xl font-hud font-bold text-white">
-              {telemetry?.cpu.totalUsage ?? 0}<span className="text-sm font-normal text-[#849495]">%</span>
-            </span>
-            <span className="text-xs text-[#849495] font-mono font-medium">
-              User: {telemetry?.cpu.user ?? 0}%
-            </span>
-          </div>
-          {/* Progress bar */}
-          <div className="w-full bg-void rounded-full h-1.5 overflow-hidden border border-cyber-cyan/20">
-            <div 
-              className="bg-cyber-cyan h-full rounded-full transition-all duration-500 shadow-neon-cyan"
-              style={{ width: `${Math.min(100, telemetry?.cpu.totalUsage ?? 0)}%` }}
-            ></div>
-          </div>
-          <div className="mt-3 text-[11px] text-[#849495] truncate font-mono">
-            {telemetry?.cpu.brand || "Apple Silicon"}
+
+          <div className="pt-2 border-t border-macos-border/60 text-[11px] text-macos-text-secondary flex justify-between">
+            <span>System: {telemetry?.cpu.system ?? 0}%</span>
+            <span>Idle: {telemetry?.cpu.idle ?? 0}%</span>
           </div>
         </div>
 
         {/* RAM Card */}
-        <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-purple/20 relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-purple font-semibold whitespace-nowrap">
-              <Layers className="w-4 h-4 shrink-0" /> BỘ NHỚ RAM
-            </span>
-            <button
-              onClick={onQuickPurgeRam}
-              disabled={isPurgingRam}
-              className="px-2 py-0.5 rounded bg-cyber-purple/20 hover:bg-cyber-purple text-cyber-purple hover:text-black text-[10px] font-mono transition-colors font-bold flex items-center gap-1 shrink-0"
-              title="Giải phóng bộ nhớ RAM không hoạt động"
-            >
-              <Zap className="w-3 h-3" />
-              {isPurgingRam ? "Đang xả..." : "Xả RAM"}
-            </button>
+        <div className="bg-white rounded-2xl p-5 border border-macos-border shadow-macos-card hover:shadow-macos-card-hover transition-all relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-macos-text-secondary text-xs font-medium mb-3">
+              <span className="flex items-center gap-1.5 text-macos-text-primary font-semibold">
+                <Layers className="w-4 h-4 text-macos-indigo shrink-0" /> RAM
+              </span>
+              <span className="text-[11px] font-mono text-macos-text-caption">
+                {telemetry ? formatGb(telemetry.memory.totalBytes) : 0} GB
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-3xl font-bold text-macos-text-primary tracking-tight">
+                {telemetry?.memory.usagePercent ?? 0}<span className="text-sm font-normal text-macos-text-secondary">%</span>
+              </span>
+              <span className="text-xs text-macos-text-secondary font-mono">
+                {telemetry ? formatGb(telemetry.memory.usedBytes) : 0} GB dùng
+              </span>
+            </div>
+            
+            {/* Apple Progress Bar */}
+            <div className="w-full bg-[#E5E5EA] rounded-full h-2 overflow-hidden my-2">
+              <div 
+                className="bg-macos-amber h-full rounded-full transition-all duration-500"
+                style={{ width: `${telemetry?.memory.usagePercent ?? 0}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-3xl font-hud font-bold text-white">
-              {telemetry ? formatGb(telemetry.memory.usedBytes) : 0}
-              <span className="text-sm font-normal text-[#849495]"> / {telemetry ? formatGb(telemetry.memory.totalBytes) : 0} GB</span>
-            </span>
-            <span className="text-xs text-cyber-purple font-mono font-bold">
-              {telemetry?.memory.usagePercent ?? 0}%
-            </span>
-          </div>
-          <div className="w-full bg-void rounded-full h-1.5 overflow-hidden border border-cyber-purple/20">
-            <div 
-              className="bg-cyber-purple h-full rounded-full transition-all duration-500 shadow-neon-purple"
-              style={{ width: `${telemetry?.memory.usagePercent ?? 0}%` }}
-            ></div>
-          </div>
-          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between items-center">
+
+          <div className="pt-2 border-t border-macos-border/60 text-[11px] text-macos-text-secondary flex justify-between items-center">
             <span>Active: {telemetry ? formatGb(telemetry.memory.activeBytes) : 0} GB</span>
             <span>Free: {telemetry ? formatGb(telemetry.memory.freeBytes) : 0} GB</span>
           </div>
         </div>
 
         {/* SSD Card */}
-        <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-green/20 relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-green font-semibold whitespace-nowrap">
-              <HardDrive className="w-4 h-4 shrink-0" /> Ổ CỨNG SSD
-            </span>
-            <span className="text-[10px] text-[#849495] shrink-0">[NVMe]</span>
+        <div className="bg-white rounded-2xl p-5 border border-macos-border shadow-macos-card hover:shadow-macos-card-hover transition-all relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-macos-text-secondary text-xs font-medium mb-3">
+              <span className="flex items-center gap-1.5 text-macos-text-primary font-semibold">
+                <HardDrive className="w-4 h-4 text-macos-blue shrink-0" /> Ổ CỨNG SSD
+              </span>
+              <span className="text-[11px] font-mono text-macos-text-caption">APFS</span>
+            </div>
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-3xl font-bold text-macos-text-primary tracking-tight">
+                {telemetry?.disk.usagePercent ?? 0}<span className="text-sm font-normal text-macos-text-secondary">%</span>
+              </span>
+              <span className="text-xs font-semibold text-macos-blue font-sans">
+                {telemetry ? formatGb(telemetry.disk.availableBytes) : 0} GB trống
+              </span>
+            </div>
+
+            {/* Apple Progress Bar */}
+            <div className="w-full bg-[#E5E5EA] rounded-full h-2 overflow-hidden my-2">
+              <div 
+                className="bg-macos-blue h-full rounded-full transition-all duration-500"
+                style={{ width: `${telemetry?.disk.usagePercent ?? 0}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-3xl font-hud font-bold text-white">
-              {telemetry ? formatGb(telemetry.disk.availableBytes) : 0}
-              <span className="text-sm font-normal text-[#849495]"> GB trống</span>
-            </span>
-            <span className="text-xs text-cyber-green font-mono font-bold">
-              {telemetry?.disk.usagePercent ?? 0}% dùng
-            </span>
-          </div>
-          <div className="w-full bg-void rounded-full h-1.5 overflow-hidden border border-cyber-green/20">
-            <div 
-              className="bg-cyber-green h-full rounded-full transition-all duration-500 shadow-neon-green"
-              style={{ width: `${telemetry?.disk.usagePercent ?? 0}%` }}
-            ></div>
-          </div>
-          <div className="mt-3 text-[11px] text-[#849495] font-mono flex justify-between items-center">
+
+          <div className="pt-2 border-t border-macos-border/60 text-[11px] text-macos-text-secondary flex justify-between items-center">
             <span>Đã dùng: {telemetry ? formatGb(telemetry.disk.usedBytes) : 0} GB</span>
             <span>Tổng: {telemetry ? formatGb(telemetry.disk.totalBytes) : 0} GB</span>
           </div>
         </div>
 
-        {/* Battery & System Card */}
-        <div className="glass-panel glass-panel-hover rounded-xl p-5 border border-cyber-amber/20 relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#849495] text-xs font-mono mb-3">
-            <span className="flex items-center gap-1.5 text-cyber-amber font-semibold whitespace-nowrap">
-              <Battery className="w-4 h-4 shrink-0" /> PIN & NGUỒN
-            </span>
-            <span className="text-[10px] text-[#849495] shrink-0">[POWER]</span>
+        {/* Battery Card */}
+        <div className="bg-white rounded-2xl p-5 border border-macos-border shadow-macos-card hover:shadow-macos-card-hover transition-all relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-macos-text-secondary text-xs font-medium mb-3">
+              <span className="flex items-center gap-1.5 text-macos-text-primary font-semibold">
+                <Battery className="w-4 h-4 text-macos-green shrink-0" /> PIN & NGUỒN
+              </span>
+              <span className="text-[11px] font-medium text-[#248A3D] bg-macos-green-subtle px-2 py-0.5 rounded-full">
+                {telemetry?.battery?.isCharging ? "Đang sạc" : "Tuyệt vời"}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-3xl font-bold text-macos-text-primary tracking-tight">
+                {telemetry?.battery?.percentage ?? 100}<span className="text-sm font-normal text-macos-text-secondary">%</span>
+              </span>
+              <span className="text-xs text-macos-text-secondary font-medium">
+                {telemetry?.battery?.source || "Pin nguồn"}
+              </span>
+            </div>
+
+            {/* Apple Progress Bar */}
+            <div className="w-full bg-[#E5E5EA] rounded-full h-2 overflow-hidden my-2">
+              <div 
+                className="bg-macos-green h-full rounded-full transition-all duration-500"
+                style={{ width: `${telemetry?.battery?.percentage ?? 100}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-3xl font-hud font-bold text-white">
-              {telemetry?.battery?.percentage ?? 100}<span className="text-sm font-normal text-[#849495]">%</span>
-            </span>
-            <span className="text-xs text-cyber-green font-mono font-bold">
-              {telemetry?.battery?.isCharging ? "Đang sạc" : "Ổn định"}
-            </span>
-          </div>
-          <div className="w-full bg-void rounded-full h-1.5 overflow-hidden border border-cyber-amber/20">
-            <div 
-              className="bg-cyber-amber h-full rounded-full transition-all duration-500"
-              style={{ width: `${telemetry?.battery?.percentage ?? 100}%` }}
-            ></div>
-          </div>
-          <div className="mt-3 text-[11px] text-[#849495] font-mono truncate">
-            Nguồn: {telemetry?.battery?.source || "Bộ sạc AC"}
+
+          <div className="pt-2 border-t border-macos-border/60 text-[11px] text-macos-text-secondary flex justify-between items-center">
+            <span>Tình trạng: Bình thường</span>
+            <span>Chu kỳ: Ổn định</span>
           </div>
         </div>
       </div>
 
-      {/* Activity Stream Terminal */}
-      <div className="glass-panel rounded-2xl p-6 border border-cyber-cyan/20">
-        <div className="flex items-center justify-between border-b border-cyber-cyan/15 pb-4 mb-4">
+      {/* Activity Stream Card (Cupertino Activity Feed) */}
+      <div className="bg-white rounded-2xl p-6 border border-macos-border shadow-macos-card">
+        <div className="flex items-center justify-between border-b border-macos-border/70 pb-3.5 mb-2">
           <div className="flex items-center space-x-2">
-            <TerminalIcon className="w-4 h-4 text-cyber-cyan" />
-            <h3 className="font-mono text-sm font-bold text-white uppercase tracking-wider">
-              Dòng Hoạt Động Hệ Thống (Activity Stream Terminal)
+            <Activity className="w-4 h-4 text-macos-blue" />
+            <h3 className="text-sm font-bold text-macos-text-primary">
+              Hoạt động hệ thống
             </h3>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-cyber-red/80"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-cyber-amber/80"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-cyber-green/80"></div>
-          </div>
+          <span className="text-xs text-macos-text-secondary font-medium">
+            {terminalLogs.length} sự kiện gần đây
+          </span>
         </div>
 
-        <div className="bg-void/90 rounded-xl p-4 font-mono text-xs text-[#e5e2e1] h-48 overflow-y-auto space-y-1.5 border border-surface-border">
+        <div className="divide-y divide-macos-border/60 max-h-56 overflow-y-auto">
           {terminalLogs.length === 0 ? (
-            <div className="text-[#849495] flex items-center gap-2 italic">
-              <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
-              Đang kết nối lắng nghe tiến trình Mole Core... Chưa có lệnh nào đang chạy.
+            <div className="py-6 text-center text-macos-text-secondary text-xs italic">
+              Đang lắng nghe tiến trình Mole Core... Chưa có hoạt động nào phát sinh.
             </div>
           ) : (
-            terminalLogs.map((log, idx) => {
-              let colorClass = "text-[#e5e2e1]";
-              if (log.includes("[KHỞI ĐỘNG]") || log.includes("[QUÉT]")) colorClass = "text-cyber-cyan";
-              else if (log.includes("[HOÀN TẤT]")) colorClass = "text-cyber-green font-bold";
-              else if (log.includes("[CẢNH BÁO]") || log.includes("[LỖI]")) colorClass = "text-cyber-red";
+            terminalLogs.slice(0, 15).map((log, idx) => {
+              const isSuccess = log.includes("[HOÀN TẤT]");
+              const isAlert = log.includes("[CẢNH BÁO]") || log.includes("[LỖI]");
+              const isAction = log.includes("[QUÉT]") || log.includes("[PURGE]") || log.includes("[DỌN]");
+
               return (
-                <div key={idx} className={`leading-relaxed ${colorClass}`}>
-                  <span className="text-[#849495] mr-2">›</span>
-                  {log}
+                <div key={idx} className="py-2.5 flex items-center justify-between text-xs hover:bg-[#F9F9FB] px-2 rounded-lg transition-colors">
+                  <div className="flex items-center space-x-2.5 min-w-0 pr-4">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${
+                      isSuccess ? "bg-macos-green" : isAlert ? "bg-macos-red" : isAction ? "bg-macos-blue" : "bg-[#AEAEB2]"
+                    }`}></span>
+                    <span className="font-sans text-macos-text-primary truncate">
+                      {log}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-macos-text-caption shrink-0">
+                    Gần đây
+                  </span>
                 </div>
               );
             })

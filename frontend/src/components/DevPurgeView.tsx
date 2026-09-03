@@ -71,43 +71,43 @@ export const DevPurgeView: React.FC<DevPurgeViewProps> = ({ token }) => {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-6 rounded-2xl border border-cyber-cyan/20">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card">
         <div>
-          <h2 className="text-2xl font-hud font-bold text-white flex items-center gap-2">
-            <FolderCode className="w-6 h-6 text-cyber-cyan" />
-            DỌN DẸP DỰ ÁN LẬP TRÌNH (DEV PURGE)
+          <h2 className="text-2xl font-bold text-macos-text-primary flex items-center gap-2 tracking-tight">
+            <FolderCode className="w-6 h-6 text-macos-blue" />
+            Dọn Dẹp Dự Án Lập Trình (Dev Purge)
           </h2>
-          <p className="text-sm text-[#b9cacb] mt-1 font-sans">
-            Tìm và giải phóng hàng chục GB thư mục build trung gian: <code className="text-cyber-cyan">node_modules</code>, <code className="text-cyber-purple">target</code>, <code className="text-cyber-green">.gradle</code>, <code className="text-cyber-amber">venv</code> cũ.
+          <p className="text-xs text-macos-text-secondary mt-1 font-sans">
+            Tìm và giải phóng hàng chục GB thư mục build trung gian: <code className="text-macos-blue font-semibold">node_modules</code>, <code className="text-macos-indigo font-semibold">target</code>, <code className="text-macos-green font-semibold">.gradle</code>, <code className="text-macos-amber font-semibold">venv</code> cũ.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchArtifacts}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl border border-cyber-cyan/40 bg-cyber-cyan/10 hover:bg-cyber-cyan hover:text-black text-cyber-cyan text-sm font-mono font-bold transition-all flex items-center gap-2"
+            className="px-4 py-2 rounded-full border border-macos-border bg-white hover:bg-gray-50 text-macos-text-primary text-xs font-semibold shadow-macos-card transition-all flex items-center gap-1.5"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            {loading ? "Đang quét code..." : "Quét Lại"}
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <span>{loading ? "Đang quét code..." : "Quét Lại"}</span>
           </button>
           <button
             onClick={handleDeleteSelected}
             disabled={loading || selectedCount === 0}
-            className="px-6 py-2.5 rounded-xl bg-cyber-purple hover:bg-white text-black font-hud font-bold text-sm shadow-neon-purple transition-all flex items-center gap-2 disabled:opacity-40"
+            className="px-5 py-2 rounded-full bg-macos-red hover:bg-[#E02B20] text-white font-semibold text-xs shadow-macos-button transition-all flex items-center gap-1.5 disabled:opacity-40"
           >
-            <Trash2 className="w-4 h-4" />
-            Xóa Đã Chọn ({formatGb(selectedBytes)})
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Xóa Đã Chọn ({formatGb(selectedBytes)})</span>
           </button>
         </div>
       </div>
 
       {/* Filter & Warning Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl glass-panel border border-cyber-amber/20 text-xs">
-        <div className="flex items-center space-x-2 text-cyber-amber">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-white border border-macos-border shadow-macos-card text-xs">
+        <div className="flex items-center space-x-2 text-macos-amber">
           <ShieldAlert className="w-4 h-4 shrink-0" />
-          <span>An toàn: Chỉ quét và xóa thư mục dependencies, không làm mất mã nguồn hoặc commit Git của bạn.</span>
+          <span className="font-medium text-macos-text-primary">An toàn: Chỉ quét và xóa thư mục dependencies, không làm mất mã nguồn hoặc commit Git của bạn.</span>
         </div>
-        <div className="flex items-center space-x-2 text-[#849495] font-mono">
+        <div className="flex items-center space-x-2 text-macos-text-secondary font-sans font-medium">
           <span>Lọc không truy cập &gt;</span>
           <select
             value={filterDays}
@@ -120,7 +120,7 @@ export const DevPurgeView: React.FC<DevPurgeViewProps> = ({ token }) => {
               });
               setSelectedPaths(initial);
             }}
-            className="bg-void border border-surface-border text-white px-2 py-1 rounded text-xs"
+            className="bg-[#F9F9FB] border border-macos-border text-macos-text-primary px-3 py-1 rounded-lg text-xs font-medium"
           >
             <option value="0">Tất cả thư mục</option>
             <option value="14">&gt; 14 ngày</option>
@@ -131,15 +131,15 @@ export const DevPurgeView: React.FC<DevPurgeViewProps> = ({ token }) => {
       </div>
 
       {/* Artifacts List */}
-      <div className="glass-panel rounded-2xl p-6 border border-cyber-cyan/15 space-y-3">
+      <div className="bg-white rounded-2xl p-6 border border-macos-border shadow-macos-card space-y-3">
         {loading ? (
-          <div className="py-16 text-center text-cyber-cyan font-mono text-sm animate-pulse">
+          <div className="py-16 text-center text-macos-blue font-mono text-xs animate-pulse">
             Đang truy tìm các thư mục dependencies trong Workspace và Projects...
           </div>
         ) : artifacts.length === 0 ? (
-          <div className="py-16 text-center text-[#849495] space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-cyber-green mx-auto" />
-            <p className="font-bold text-white">Không phát hiện thư mục build dư thừa nào!</p>
+          <div className="py-16 text-center text-macos-text-secondary space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-macos-green mx-auto" />
+            <p className="font-bold text-macos-text-primary text-sm">Không phát hiện thư mục build dư thừa nào!</p>
             <p className="text-xs">Không gian làm việc của bạn đang ở trạng thái tối ưu.</p>
           </div>
         ) : (
@@ -151,30 +151,30 @@ export const DevPurgeView: React.FC<DevPurgeViewProps> = ({ token }) => {
                 onClick={() => toggleSelect(item.path)}
                 className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-cyber-purple/10 border-cyber-purple/40 shadow-neon-purple/20"
-                    : "bg-surface-card border-surface-border opacity-70 hover:opacity-100"
+                    ? "bg-macos-indigo-subtle/30 border-macos-indigo/50 shadow-xs"
+                    : "bg-white border-macos-border hover:border-macos-indigo/30"
                 }`}
               >
                 <div className="flex items-center space-x-3 truncate">
-                  <div className={`w-5 h-5 rounded flex items-center justify-center border shrink-0 ${
-                    isSelected ? "bg-cyber-purple border-cyber-purple text-black font-bold" : "border-[#849495]"
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center border shrink-0 transition-all ${
+                    isSelected ? "bg-macos-indigo border-macos-indigo text-white font-bold" : "border-[#C7C7CC] bg-white"
                   }`}>
                     {isSelected && "✓"}
                   </div>
                   <div className="truncate">
-                    <div className="text-sm font-bold text-white flex items-center gap-2 truncate">
-                      <span className="text-cyber-cyan font-mono text-xs px-1.5 py-0.5 rounded bg-cyber-cyan/10">
+                    <div className="text-sm font-semibold text-macos-text-primary flex items-center gap-2 truncate">
+                      <span className="text-macos-indigo font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-macos-indigo-subtle border border-macos-indigo/20">
                         {item.type}
                       </span>
                       <span className="truncate">{item.path}</span>
                     </div>
-                    <p className="text-xs text-[#849495] font-mono mt-0.5">
+                    <p className="text-xs text-macos-text-caption font-sans mt-0.5">
                       Không chỉnh sửa trong {item.lastModifiedDays} ngày qua
                     </p>
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-4">
-                  <div className="font-mono text-sm font-bold text-cyber-purple">{item.sizeString}</div>
+                  <div className="font-mono text-sm font-bold text-macos-indigo">{item.sizeString}</div>
                 </div>
               </div>
             );

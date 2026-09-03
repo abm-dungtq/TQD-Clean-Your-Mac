@@ -101,26 +101,26 @@ export const CleanView: React.FC<CleanViewProps> = ({
     <div className="space-y-6 pb-12">
       {/* Banner thông báo đồng bộ từ Terminal ngoài nếu có */}
       {sessionSource === "terminal" && (
-        <div className="p-4 rounded-2xl bg-cyber-purple/15 border border-cyber-purple/40 text-cyber-purple flex items-center justify-between animate-pulse">
+        <div className="p-4 rounded-2xl bg-macos-indigo-subtle border border-macos-indigo/30 text-macos-indigo flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <Terminal className="w-5 h-5 animate-bounce" />
+            <Terminal className="w-5 h-5" />
             <div>
-              <div className="font-hud font-bold text-sm text-white">ĐỒNG BỘ TIẾN TRÌNH TỪ TERMINAL HỆ THỐNG</div>
-              <div className="text-xs text-[#b9cacb]">Đang phát hiện lệnh dọn dẹp chạy trực tiếp từ Terminal macOS (mo clean). Giao diện đang cập nhật thời gian thực.</div>
+              <div className="font-bold text-sm text-macos-text-primary">ĐỒNG BỘ TIẾN TRÌNH TỪ TERMINAL HỆ THỐNG</div>
+              <div className="text-xs text-macos-text-secondary">Đang phát hiện lệnh dọn dẹp chạy trực tiếp từ Terminal macOS (mo clean). Giao diện đang cập nhật thời gian thực.</div>
             </div>
           </div>
-          <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-cyber-purple/30 border border-cyber-purple/50 text-white">Terminal Active</span>
+          <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-white border border-macos-indigo/30 text-macos-indigo font-bold shadow-xs">Terminal Active</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 glass-panel p-6 rounded-2xl border border-cyber-cyan/20">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card">
         <div>
-          <h2 className="text-2xl font-hud font-bold text-white flex items-center gap-2">
-            <Trash2 className="w-6 h-6 text-cyber-cyan" />
-            DỌN DẸP BỘ NHỚ ĐỆM & TỆP RÁC
+          <h2 className="text-2xl font-bold text-macos-text-primary flex items-center gap-2 tracking-tight">
+            <Trash2 className="w-6 h-6 text-macos-blue" />
+            Dọn Dẹp Bộ Nhớ Đệm & Tệp Rác
           </h2>
-          <p className="text-sm text-[#b9cacb] mt-1 font-sans">
+          <p className="text-xs text-macos-text-secondary mt-1 font-sans">
             Quét và loại bỏ an toàn các tệp nhật ký, bộ đệm trình duyệt, tệp tạm hệ thống và ứng dụng.
           </p>
         </div>
@@ -128,24 +128,24 @@ export const CleanView: React.FC<CleanViewProps> = ({
           <button
             onClick={onRunScan}
             disabled={isScanning || isCleaning}
-            className="px-4 py-2.5 rounded-xl border border-cyber-cyan/40 bg-cyber-cyan/10 hover:bg-cyber-cyan hover:text-black text-cyber-cyan text-sm font-mono font-bold transition-all flex items-center gap-2 disabled:opacity-40"
+            className="px-4 py-2 rounded-full border border-macos-border bg-white hover:bg-gray-50 text-macos-text-primary text-xs font-semibold shadow-macos-card transition-all flex items-center gap-1.5 disabled:opacity-40"
           >
-            <RefreshCw className={`w-4 h-4 ${isScanning ? "animate-spin" : ""}`} />
-            {isScanning ? "Đang quét..." : "Quét Lại (Dry-Run)"}
+            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? "animate-spin" : ""}`} />
+            <span>{isScanning ? "Đang quét..." : "Quét Lại (Dry-Run)"}</span>
           </button>
           <button
             onClick={() => setShowConfirmModal(true)}
             disabled={isCleaning || selectedCount === 0}
-            className="px-6 py-2.5 rounded-xl bg-cyber-cyan hover:bg-white text-black font-hud font-bold text-sm shadow-neon-cyan transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-2 rounded-full bg-macos-blue hover:bg-macos-blue-hover text-white font-semibold text-xs shadow-macos-button transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isCleaning ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-black" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                 <span>{activeCategoryObj ? `Đang dọn: ${activeCategoryObj.name.slice(0, 18)}...` : "Đang dọn dẹp..."}</span>
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>Dọn Dẹp Ngay ({formatGb(selectedBytes)})</span>
               </>
             )}
@@ -153,24 +153,24 @@ export const CleanView: React.FC<CleanViewProps> = ({
         </div>
       </div>
 
-      {/* Summary Stat */}
+      {/* Summary Stat (3 Cards) */}
       {scanResult && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass-panel p-4 rounded-xl border border-surface-border">
-            <span className="text-xs font-mono text-[#849495] uppercase">Tổng rác phát hiện</span>
-            <div className="text-2xl font-hud font-bold text-cyber-cyan mt-1">
+          <div className="bg-white p-4 rounded-2xl border border-macos-border shadow-macos-card">
+            <span className="text-xs font-medium text-macos-text-secondary uppercase tracking-wider">Tổng rác phát hiện</span>
+            <div className="text-2xl font-bold text-macos-blue mt-1 tracking-tight">
               {scanResult.totalSizeString}
             </div>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-surface-border">
-            <span className="text-xs font-mono text-[#849495] uppercase">Mục đã chọn</span>
-            <div className="text-2xl font-hud font-bold text-cyber-purple mt-1">
+          <div className="bg-white p-4 rounded-2xl border border-macos-border shadow-macos-card">
+            <span className="text-xs font-medium text-macos-text-secondary uppercase tracking-wider">Mục đã chọn</span>
+            <div className="text-2xl font-bold text-macos-indigo mt-1 tracking-tight">
               {selectedCount} / {scanResult.categories.length} danh mục
             </div>
           </div>
-          <div className="glass-panel p-4 rounded-xl border border-surface-border">
-            <span className="text-xs font-mono text-[#849495] uppercase">Dung lượng sẽ thu hồi</span>
-            <div className="text-2xl font-hud font-bold text-cyber-green mt-1">
+          <div className="bg-white p-4 rounded-2xl border border-macos-border shadow-macos-card">
+            <span className="text-xs font-medium text-macos-text-secondary uppercase tracking-wider">Dung lượng sẽ thu hồi</span>
+            <div className="text-2xl font-bold text-macos-green mt-1 tracking-tight">
               {formatGb(selectedBytes)}
             </div>
           </div>
@@ -178,20 +178,21 @@ export const CleanView: React.FC<CleanViewProps> = ({
       )}
 
       {/* Categories Checklist */}
-      <div className="glass-panel p-6 rounded-2xl border border-surface-border space-y-3">
-        <div className="flex items-center justify-between text-xs font-mono text-[#849495] uppercase tracking-wider pb-2 border-b border-surface-border">
-          <span className="flex items-center gap-1.5 text-cyber-green">
-            <ShieldCheck className="w-4 h-4" /> Danh mục tệp dọn dẹp được bảo vệ
+      <div className="bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card space-y-3">
+        <div className="flex items-center justify-between text-xs font-medium text-macos-text-secondary uppercase tracking-wider pb-3 border-b border-macos-border/70">
+          <span className="flex items-center gap-1.5 text-macos-text-primary font-bold">
+            <ShieldCheck className="w-4 h-4 text-macos-green" /> Danh mục tệp dọn dẹp được bảo vệ
           </span>
           {isCleaning && activeCategoryObj && (
-            <span className="text-cyber-cyan animate-pulse font-bold">
-              ⚡ ĐANG XỬ LÝ: {activeCategoryObj.name}
+            <span className="text-macos-blue font-bold flex items-center gap-1.5">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ĐANG XỬ LÝ: {activeCategoryObj.name}
             </span>
           )}
         </div>
 
         {!scanResult || scanResult.categories.length === 0 ? (
-          <div className="text-center py-8 text-[#849495] font-mono text-sm">
+          <div className="text-center py-8 text-macos-text-secondary text-sm">
             {isScanning ? "Đang phân tích các thành phần rác trên hệ thống..." : "Không tìm thấy tệp rác nào cần dọn dẹp."}
           </div>
         ) : (
@@ -208,70 +209,65 @@ export const CleanView: React.FC<CleanViewProps> = ({
                   <div
                     key={cat.id}
                     onClick={() => toggleSelect(cat.id)}
-                    className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+                    className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
                       isActive
-                        ? "bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,242,255,0.4)] ring-1 ring-cyber-cyan animate-pulse cursor-default"
+                        ? "bg-macos-blue-subtle border-macos-blue ring-1 ring-macos-blue cursor-default"
                         : isCompleted
-                        ? "bg-cyber-green/10 border-cyber-green/40 opacity-90 cursor-default"
+                        ? "bg-macos-green-subtle/40 border-macos-green/30 cursor-default"
                         : isCleaning
-                        ? "bg-surface-card border-surface-border opacity-50 cursor-not-allowed"
+                        ? "bg-gray-50 border-macos-border opacity-50 cursor-not-allowed"
                         : isSelected
-                        ? "bg-cyber-cyan/10 border-cyber-cyan/40 shadow-neon-cyan/20 cursor-pointer"
-                        : "bg-surface-card border-surface-border hover:border-cyber-cyan/20 opacity-70 cursor-pointer"
+                        ? "bg-macos-blue-subtle/30 border-macos-blue/40 shadow-xs cursor-pointer"
+                        : "bg-white border-macos-border hover:border-macos-blue/30 cursor-pointer"
                     }`}
                   >
-                    {isActive && (
-                      <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-cyber-cyan animate-pulse" />
-                    )}
-
                     <div className="flex items-center space-x-3.5 pl-1">
                       <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
                         isActive
-                          ? "border-cyber-cyan bg-cyber-cyan/20 text-cyber-cyan"
+                          ? "border-macos-blue bg-macos-blue text-white"
                           : isCompleted
-                          ? "border-cyber-green bg-cyber-green text-black"
+                          ? "border-macos-green bg-macos-green text-white"
                           : isSelected
-                          ? "bg-cyber-cyan border-cyber-cyan text-black"
-                          : "border-[#849495]"
+                          ? "bg-macos-blue border-macos-blue text-white"
+                          : "border-[#C7C7CC] bg-white"
                       }`}>
                         {isActive ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-cyber-cyan" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                         ) : isCompleted ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-black stroke-[3]" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white stroke-[3]" />
                         ) : isSelected ? (
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         ) : null}
                       </div>
 
                       <div>
-                        <div className="text-sm font-bold text-white flex items-center gap-2">
-                          <span className={isActive ? "text-cyber-cyan font-bold" : ""}>{cat.name}</span>
+                        <div className="text-sm font-semibold text-macos-text-primary flex items-center gap-2">
+                          <span className={isActive ? "text-macos-blue font-bold" : ""}>{cat.name}</span>
 
                           {isActive ? (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyber-cyan/30 text-cyber-cyan border border-cyber-cyan/50 animate-pulse font-bold flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-ping" />
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-macos-blue text-white font-bold flex items-center gap-1">
                               ĐANG DỌN DẸP...
                             </span>
                           ) : isCompleted ? (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyber-green/20 text-cyber-green border border-cyber-green/40 font-bold flex items-center gap-1">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-macos-green-subtle text-[#248A3D] font-bold flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3" />
                               ĐÃ HOÀN THÀNH
                             </span>
                           ) : (
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyber-green/20 text-cyber-green border border-cyber-green/30">
-                              ✓ Không cần quyền
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-macos-green-subtle text-[#248A3D] border border-macos-green/20">
+                              ✓ An toàn
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-[#849495] mt-0.5">{cat.description}</p>
+                        <p className="text-xs text-macos-text-secondary mt-0.5">{cat.description}</p>
                       </div>
                     </div>
 
                     <div className="text-right font-mono">
-                      <div className={`text-sm font-bold ${isActive ? "text-cyber-cyan" : "text-white"}`}>
+                      <div className={`text-sm font-bold ${isActive ? "text-macos-blue" : "text-macos-text-primary"}`}>
                         {cat.sizeString}
                       </div>
-                      <div className="text-[11px] text-[#849495]">
+                      <div className="text-[11px] text-macos-text-caption">
                         {isCompleted ? "Đã giải phóng" : `${cat.itemCount} phần tử`}
                       </div>
                     </div>
@@ -282,16 +278,16 @@ export const CleanView: React.FC<CleanViewProps> = ({
 
             {/* TẦNG 2: HỆ THỐNG SÂU (YÊU CẦU TOUCH ID / FDA) */}
             {scanResult.categories.some(c => c.tier === 2) && (
-              <div className="pt-4 border-t border-surface-border/70 space-y-2.5">
+              <div className="pt-4 border-t border-macos-border/70 space-y-2.5">
                 <div className="flex items-center justify-between pb-1">
-                  <span className="flex items-center gap-1.5 text-xs font-mono text-cyber-purple font-bold tracking-wider uppercase">
-                    <Fingerprint className="w-4 h-4 text-cyber-purple" />
-                    Tối Ưu Hóa Hệ Thống Sâu (Yêu Cầu Touch ID / FDA)
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-macos-indigo tracking-wider uppercase">
+                    <Fingerprint className="w-4 h-4 text-macos-indigo" />
+                    Tối Ưu Hóa Hệ Thống Sâu (Yêu Cầu Quyền Quản Trị / FDA)
                   </span>
                   <button
                     onClick={handleOpenFDA}
                     disabled={openingFDA}
-                    className="text-[11px] font-mono text-cyber-cyan hover:text-white bg-cyber-cyan/10 hover:bg-cyber-cyan/20 border border-cyber-cyan/30 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1"
+                    className="text-[11px] font-semibold text-macos-blue hover:underline bg-macos-blue-subtle px-2.5 py-1 rounded-lg transition-all flex items-center gap-1"
                   >
                     <ExternalLink className="w-3 h-3" />
                     {openingFDA ? "Đang mở Cài đặt..." : "Mở Cài Đặt FDA"}
@@ -308,54 +304,54 @@ export const CleanView: React.FC<CleanViewProps> = ({
                     <div
                       key={cat.id}
                       onClick={() => toggleSelect(cat.id)}
-                      className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+                      className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
                         isActive
-                          ? "bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,242,255,0.4)] ring-1 ring-cyber-cyan animate-pulse cursor-default"
+                          ? "bg-macos-blue-subtle border-macos-blue ring-1 ring-macos-blue cursor-default"
                           : isCompleted
-                          ? "bg-cyber-green/10 border-cyber-green/40 opacity-90 cursor-default"
+                          ? "bg-macos-green-subtle/40 border-macos-green/30 cursor-default"
                           : isCleaning
-                          ? "bg-surface-card border-surface-border opacity-50 cursor-not-allowed"
+                          ? "bg-gray-50 border-macos-border opacity-50 cursor-not-allowed"
                           : isSelected
-                          ? "bg-cyber-purple/15 border-cyber-purple/40 shadow-[0_0_15px_rgba(188,19,254,0.2)] cursor-pointer"
-                          : "bg-surface-card border-surface-border hover:border-cyber-purple/30 opacity-70 cursor-pointer"
+                          ? "bg-macos-indigo-subtle/40 border-macos-indigo/50 shadow-xs cursor-pointer"
+                          : "bg-white border-macos-border hover:border-macos-indigo/30 cursor-pointer"
                       }`}
                     >
                       <div className="flex items-center space-x-3.5 pl-1">
                         <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
                           isActive
-                            ? "border-cyber-cyan bg-cyber-cyan/20 text-cyber-cyan"
+                            ? "border-macos-blue bg-macos-blue text-white"
                             : isCompleted
-                            ? "border-cyber-green bg-cyber-green text-black"
+                            ? "border-macos-green bg-macos-green text-white"
                             : isSelected
-                            ? "bg-cyber-purple border-cyber-purple text-white"
-                            : "border-[#849495]"
+                            ? "bg-macos-indigo border-macos-indigo text-white"
+                            : "border-[#C7C7CC] bg-white"
                         }`}>
                           {isActive ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-cyber-cyan" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                           ) : isCompleted ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-black stroke-[3]" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-white stroke-[3]" />
                           ) : isSelected ? (
                             <Check className="w-3.5 h-3.5 stroke-[3]" />
                           ) : null}
                         </div>
 
                         <div>
-                          <div className="text-sm font-bold text-white flex items-center gap-2">
-                            <span className={isActive ? "text-cyber-cyan font-bold" : ""}>{cat.name}</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/40 flex items-center gap-1">
+                          <div className="text-sm font-semibold text-macos-text-primary flex items-center gap-2">
+                            <span className={isActive ? "text-macos-blue font-bold" : ""}>{cat.name}</span>
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-macos-indigo-subtle text-macos-indigo border border-macos-indigo/20 flex items-center gap-1">
                               <Lock className="w-2.5 h-2.5" />
                               Touch ID / Admin
                             </span>
                           </div>
-                          <p className="text-xs text-[#849495] mt-0.5">{cat.description}</p>
+                          <p className="text-xs text-macos-text-secondary mt-0.5">{cat.description}</p>
                         </div>
                       </div>
 
                       <div className="text-right font-mono">
-                        <div className={`text-sm font-bold ${isActive ? "text-cyber-cyan" : "text-white"}`}>
+                        <div className={`text-sm font-bold ${isActive ? "text-macos-blue" : "text-macos-text-primary"}`}>
                           {cat.sizeString}
                         </div>
-                        <div className="text-[11px] text-[#849495]">
+                        <div className="text-[11px] text-macos-text-caption">
                           {isCompleted ? "Đã giải phóng" : `${cat.itemCount} phần tử`}
                         </div>
                       </div>
@@ -368,18 +364,18 @@ export const CleanView: React.FC<CleanViewProps> = ({
         )}
       </div>
 
-      {/* Embedded Terminal Stream Drawer on CleanView */}
-      <div className="glass-panel rounded-2xl p-5 border border-cyber-cyan/30 space-y-3">
-        <div className="flex items-center justify-between border-b border-surface-border pb-3">
+      {/* Embedded Activity Feed on CleanView */}
+      <div className="bg-white rounded-2xl p-5 border border-macos-border shadow-macos-card space-y-3">
+        <div className="flex items-center justify-between border-b border-macos-border/70 pb-3">
           <div className="flex items-center space-x-2">
-            <Terminal className="w-4 h-4 text-cyber-cyan" />
-            <h3 className="font-hud font-bold text-sm text-white uppercase tracking-wider">
-              Dòng Hoạt Động Terminal Thời Gian Thực (Activity Console)
+            <Terminal className="w-4 h-4 text-macos-blue" />
+            <h3 className="font-bold text-sm text-macos-text-primary">
+              Nhật Ký Dọn Dẹp Trực Tiếp (Mole Activity Console)
             </h3>
           </div>
           {isCleaning && (
-            <span className="flex items-center gap-1.5 text-xs font-mono text-cyber-cyan">
-              <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping" />
+            <span className="flex items-center gap-1.5 text-xs text-macos-blue font-medium">
+              <Loader2 className="w-3 h-3 animate-spin" />
               Đang kết nối Mole Engine...
             </span>
           )}
@@ -387,15 +383,15 @@ export const CleanView: React.FC<CleanViewProps> = ({
 
         <div
           ref={logContainerRef}
-          className="h-44 overflow-y-auto rounded-xl bg-[#030303] p-3.5 border border-surface-border font-mono text-xs text-[#b9cacb] space-y-1.5"
+          className="h-44 overflow-y-auto rounded-xl bg-[#F9F9FB] p-3.5 border border-macos-border font-mono text-xs text-macos-text-primary space-y-1.5"
         >
           {terminalLogs.length === 0 ? (
-            <div className="text-[#849495] italic">Chờ nhận tín hiệu từ Terminal...</div>
+            <div className="text-macos-text-secondary italic py-2">Chờ nhận tín hiệu từ Terminal...</div>
           ) : (
             terminalLogs.slice(0, 60).map((log, idx) => (
               <div key={idx} className="flex items-start space-x-2 leading-relaxed">
-                <span className="text-cyber-cyan select-none">›</span>
-                <span className={log.includes("[LỖI]") || log.includes("[CẢNH BÁO]") ? "text-cyber-amber" : log.includes("[ĐANG XỬ LÝ]") || log.includes("[TIẾN TRÌNH]") ? "text-cyber-cyan font-bold" : log.includes("[HOÀN TẤT]") ? "text-cyber-green font-bold" : "text-[#b9cacb]"}>
+                <span className="text-macos-blue select-none">›</span>
+                <span className={log.includes("[LỖI]") || log.includes("[CẢNH BÁO]") ? "text-macos-red font-semibold" : log.includes("[ĐANG XỬ LÝ]") || log.includes("[TIẾN TRÌNH]") ? "text-macos-blue font-bold" : log.includes("[HOÀN TẤT]") ? "text-macos-green font-bold" : "text-macos-text-primary"}>
                   {log}
                 </span>
               </div>
@@ -406,32 +402,32 @@ export const CleanView: React.FC<CleanViewProps> = ({
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-panel p-6 rounded-2xl max-w-md w-full border border-cyber-cyan/40 shadow-2xl space-y-4">
-            <div className="flex items-center space-x-3 text-cyber-cyan">
-              <AlertTriangle className="w-6 h-6 text-cyber-amber" />
-              <h3 className="font-hud font-bold text-lg text-white">Xác nhận dọn dẹp hệ thống</h3>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-2xl max-w-md w-full border border-macos-border shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-macos-amber">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="font-bold text-lg text-macos-text-primary">Xác nhận dọn dẹp hệ thống</h3>
             </div>
-            <p className="text-sm text-[#b9cacb] leading-relaxed">
-              Bạn sắp tiến hành dọn dẹp <strong className="text-cyber-green">{selectedCount} danh mục</strong> đã chọn với tổng dung lượng giải phóng dự kiến là <strong className="text-cyber-cyan">{formatGb(selectedBytes)}</strong>.
+            <p className="text-sm text-macos-text-secondary leading-relaxed">
+              Bạn sắp tiến hành dọn dẹp <strong className="text-macos-text-primary">{selectedCount} danh mục</strong> đã chọn với tổng dung lượng giải phóng dự kiến là <strong className="text-macos-blue">{formatGb(selectedBytes)}</strong>.
             </p>
-            <div className="p-3 rounded-lg bg-surface border border-surface-border text-xs text-[#849495] font-mono space-y-1">
-              <div className="text-white font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-cyber-green" /> Cơ chế an toàn được kích hoạt:
+            <div className="p-3.5 rounded-xl bg-[#F9F9FB] border border-macos-border text-xs text-macos-text-secondary space-y-1.5">
+              <div className="text-macos-text-primary font-bold flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-macos-green" /> Cơ chế an toàn được kích hoạt:
               </div>
-              <div>• Danh sách loại trừ (Whitelist) sẽ được bỏ qua tuyệt đối.</div>
-              <div>• Thao tác được ghi nhật ký vào operations.log.</div>
+              <div>• Danh sách loại trừ (Whitelist) sẽ được bảo vệ tuyệt đối.</div>
+              <div>• Thao tác dọn dẹp được ghi nhật ký đầy đủ vào operations.log.</div>
             </div>
             <div className="flex items-center justify-end space-x-3 pt-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 rounded-xl text-sm font-mono text-[#849495] hover:text-white hover:bg-surface transition-all"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-macos-text-secondary hover:text-macos-text-primary hover:bg-gray-100 transition-all"
               >
                 Hủy bỏ
               </button>
               <button
                 onClick={handleStartClean}
-                className="px-5 py-2 rounded-xl bg-cyber-cyan hover:bg-white text-black font-hud font-bold text-sm shadow-neon-cyan transition-all flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-macos-blue hover:bg-macos-blue-hover text-white font-semibold text-xs shadow-macos-button transition-all flex items-center gap-1.5"
               >
                 <Sparkles className="w-4 h-4" /> Bắt đầu dọn dẹp
               </button>

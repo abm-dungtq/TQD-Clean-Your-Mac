@@ -64,22 +64,22 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ token }) => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="glass-panel p-6 rounded-2xl border border-cyber-cyan/20">
-        <h2 className="text-2xl font-hud font-bold text-white flex items-center gap-2">
-          <Cpu className="w-6 h-6 text-cyber-cyan" />
-          TỐI ƯU HÓA & TĂNG TỐC HỆ THỐNG (SYSTEM OPTIMIZER)
+      <div className="bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card">
+        <h2 className="text-2xl font-bold text-macos-text-primary flex items-center gap-2 tracking-tight">
+          <Cpu className="w-6 h-6 text-macos-blue" />
+          Tối Ưu Hóa & Tăng Tốc Hệ Thống (System Optimizer)
         </h2>
-        <p className="text-sm text-[#b9cacb] mt-1 font-sans">
+        <p className="text-xs text-macos-text-secondary mt-1 font-sans">
           Thực thi các tác vụ bảo trì hệ thống chuyên sâu an toàn của macOS để khôi phục độ mượt mà tối đa.
         </p>
       </div>
 
       {resultMsg && (
         <div className={`p-4 rounded-xl border flex items-center gap-3 ${
-          resultMsg.success ? "bg-cyber-green/10 border-cyber-green/40 text-cyber-green" : "bg-cyber-red/10 border-cyber-red/40 text-cyber-red"
+          resultMsg.success ? "bg-macos-green-subtle border-macos-green/30 text-[#248A3D]" : "bg-macos-red-subtle border-macos-red/30 text-macos-red"
         }`}>
           {resultMsg.success ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
-          <span className="text-sm font-mono">{resultMsg.text}</span>
+          <span className="text-xs font-medium">{resultMsg.text}</span>
         </div>
       )}
 
@@ -90,25 +90,25 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ token }) => {
           return (
             <div
               key={task.id}
-              className="glass-panel p-6 rounded-2xl border border-surface-border hover:border-cyber-cyan/30 transition-all flex flex-col justify-between space-y-4"
+              className="bg-white p-6 rounded-2xl border border-macos-border shadow-macos-card hover:shadow-macos-card-hover transition-all flex flex-col justify-between space-y-4"
             >
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-void border border-surface-border flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-cyber-cyan" />
+                  <div className="w-11 h-11 rounded-xl bg-macos-blue-subtle border border-macos-blue/20 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-macos-blue" />
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-high text-[#849495] border border-surface-border">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F2F2F7] text-macos-text-secondary border border-macos-border">
                     {task.badge}
                   </span>
                 </div>
-                <h3 className="font-hud font-bold text-lg text-white">{task.title}</h3>
-                <p className="text-xs text-[#849495] leading-relaxed font-sans">{task.desc}</p>
+                <h3 className="font-bold text-base text-macos-text-primary">{task.title}</h3>
+                <p className="text-xs text-macos-text-secondary leading-relaxed font-sans">{task.desc}</p>
               </div>
 
               <button
                 onClick={() => handleOptimize(task.id as any, task.title)}
                 disabled={isLoading}
-                className="w-full py-2.5 rounded-xl bg-surface-card hover:bg-cyber-cyan hover:text-black border border-cyber-cyan/30 text-white font-mono text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-white hover:bg-macos-blue hover:text-white border border-macos-border hover:border-macos-blue text-macos-text-primary text-xs font-semibold shadow-macos-card transition-all flex items-center justify-center gap-2 active:scale-98"
               >
                 {isLoading ? (
                   <>
@@ -117,7 +117,7 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ token }) => {
                   </>
                 ) : (
                   <>
-                    <Zap className="w-3.5 h-3.5 text-cyber-cyan" />
+                    <Zap className="w-3.5 h-3.5 text-macos-amber" />
                     Kích Hoạt Tối Ưu
                   </>
                 )}
